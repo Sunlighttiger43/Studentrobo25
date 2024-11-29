@@ -6,6 +6,7 @@ markers = robot.camera.see()
 pi = math.pi
 
 while True:
+    robot.sleep(0.01)
     Yaw = marker.orientation.yaw
     if Yaw <= pi/12 and Yaw >= -pi/12:
         robot.kch.leds[LED_B].colour = Colour.RED
