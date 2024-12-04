@@ -1,137 +1,288 @@
 import sr.robot3 as sr
-from math import pi, sin, cos, sqrt, atan, asin, tan
-from typing import List, Tuple
+from math import pi, sin, cos, atan2, asin, tan
+from typing import List, Tuple, Optional
 from pid import PIDController
 import numpy as np
 from time import time
 from utils.graph import pathfinding
 import pickle
-from functools import cmp_to_key
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-class olavesRobot(sr.Robot):
-    ticks = (0, 0)
+class OlavesRobot(sr.Robot):
     def __init__(self):
-        print("Initialising")
-        STEPPERID = "STEPPER_ID_HERE"
+        logger.info("Initialising OlavesRobot")
+        STEPPER_ID = "STEPPER_ID_HERE"
         STEPPER_RATE = 9600
-        super().__init__(ignored_arduinos = [STEPPERID], raw_ports = [(STEPPERID, STEPPER_RATE)])
-        # Initialising info for positioning
-        self._position = (2.750, 0.5, pi / 2)
-        self._prev_power = (0.0, 0.0)
-        self.prev_v = np.array([0.0, 0.0, 0.0])
-        self.pk = np.array([[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]])
-        self.postime = 0.0
-        self.calltime = 0.0
-        self.encoder_index = 1
-        self.blindness = False
+        super().__init__(ignored_arduinos=[STEPPER_ID], raw_ports=[(STEPPER_ID, STEPPER_RATE)])
+        
+        # Initialising positioning information
+        self._position: Tuple[float, float, float] = (2.750, 0.5, pi / 2)
+        self._prev_power: Tuple[float, float] = (0.0, 0.0)
+        self.prev_velocity: np.ndarray = np.array([0.0, 0.0, 0.0])
+        self.pk_matrix: np.ndarray = np.array([[0.1, 0.0, 0.0],
+                                              [0.0, 0.1, 0.0],
+                                              [0.0, 0.0, 0.1]])
+        self.postime: float = 0.0
+        self.calltime: float = 0.0
+        self.encoder_index: int = 1
+        self.blindness: bool = False
 
-        # Loading the map
-        with open("maps/map.pkl", "rb") as f:
-            self.arena_map = pickle.load(f)
-        with open("maps/graph.pkl", "rb") as f:
-            self.map_graph = pickle.load(f)
-        with open('maps/wall_marker_coords.pkl', "rb") as f:
-            self.coords = pickle.load(f)[self.zone]
+        # Loading the map and graph data
+        try:
+            with open("maps/map.pkl", "rb") as f:
+                self.arena_map = pickle.load(f)
+            with open("maps/graph.pkl", "rb") as f:
+                self.map_graph = pickle.load(f)
+            with open('maps/wall_marker_coords.pkl', "rb") as f:
+                all_coords = pickle.load(f)
+                self.coords = all_coords[self.zone]
+        except FileNotFoundError as e:
+            logger.error(f"Map files not found: {e}")
+            raise
 
-        # Initialising constants for map
-        self.resolution = len(self.arena_map)
-        self.step_size = 5.750 / self.resolution
-        self.resolution_idx = []
-        for i in range(len(self.arena_map)):
-            self.resolution_idx.append((i, self.arena_map[0][i][0]))
+        # Initialising constants for the map
+        self.resolution: int = len(self.arena_map)
+        self.step_size: float = 5.750 / self.resolution
+        self.resolution_idx: List[Tuple[int, float]] = [
+            (i, self.arena_map[0][i][0]) for i in range(len(self.arena_map))
+        ]
 
-        self.init_time = time()
+        self.init_time: float = time()
 
-    def get_comp_time(self):
-        """ Returns time since round started """
+    def get_comp_time(self) -> float:
+        """Returns the time elapsed since the robot was initialised."""
         return time() - self.init_time
 
-    def sleep(self, time: float):
-        """ Acts as time.sleep, but for the simulation, as robot.sleep() does not work in the sim. """
-        super().sleep(time)  # type: ignore
+    def sleep(self, duration: float) -> None:
+        """
+        Pauses execution for a specified duration.
 
-    def _turn(self, angle: float):
-        """ Dead Reckoning turn function, not to be used outside olavesRobot subclass """
-        ANGLE_TO_TIME = 14.2  # multiplier to make the turn more accurate (not reliable, PIDs to be used when positioing is better)
-        if angle > 0:  # turn left
+        Acts as time.sleep, but for the simulation, as robot.sleep() does not work in the sim.
+
+        Parameters:
+            duration (float): The amount of time to sleep in seconds.
+        """
+        super().sleep(duration)
+
+    def _turn(self, angle: float) -> None:
+        """
+        Performs a dead reckoning turn.
+
+        This method should not be used outside the OlavesRobot subclass.
+
+        Parameters:
+            angle (float): The angle to turn in radians. Positive for left, negative for right.
+        """
+        ANGLE_TO_TIME = 14.2  # Multiplier to make the turn more accurate
+        if angle > 0:
+            # Turn left
             self.power((0.4, -0.4), angle / pi * ANGLE_TO_TIME)
-        else:  # turn right
-            self.power((-0.4, 0.4), angle / pi * -ANGLE_TO_TIME)
+        else:
+            # Turn right
+            self.power((-0.4, 0.4), abs(angle) / pi * ANGLE_TO_TIME)
 
-    def _move(self, distance: float):
-        """ Dead Reckoning turn function, not to be used outside olavesRobot subclass """
+    def _move(self, distance: float) -> None:
+        """
+        Performs a dead reckoning move.
+
+        This method should not be used outside the OlavesRobot subclass.
+
+        Parameters:
+            distance (float): The distance to move in meters. Positive to move forward, negative to move backward.
+        """
         DIST_TO_TIME = 5
         if distance > 0:
             self.power((0.4, 0.5), distance * DIST_TO_TIME)
         else:
-            self.power((-0.4, -0.5), -distance * DIST_TO_TIME)
+            self.power((-0.4, -0.5), abs(distance) * DIST_TO_TIME)
 
-    def get_marker_orientation(self, marker_id):
-       """ Returns the absolute orientation of a marker. 
-            Basic Assumptions:
-                - We take the origin to be the corner that our robot starts in. 
-                - We take the direction of the x-axis to 0 radians """
-       marker = [marker for marker in self.camera.see() if marker.id == marker_id][0]
-       marker_yaw = marker.orientation.yaw
-       marker_horizontal_angle = marker.position.horizontal_angle
-       marker_coords = self.get_marker_pos(marker_id)
-       chi = 180 - (marker_yaw + marker_horizontal_angle)
-       a, b, phi = self.get_pos()
-       y = marker_coords[1]
-       x = (y / (tan(phi)) + a) if phi != pi/2 or -pi/2 else a
-       d = (marker_coords[0] - x)
-       b = (((a - marker_coords[0])**2) + ((b - marker_coords[1])**2))**1/2
-       z = asin((b/d) * sin(marker_horizontal_angle))
-       marker_orientation = z-chi
-       return marker_orientation
+    def get_marker_orientation(self, marker_id: int) -> float:
+        """
+        Returns the absolute orientation of a specified marker.
 
-    def _turn_to_marker(self, target_marker):
-        """ Assuming that the robot is standing directly in fron of a marker, will re-orient the robot to face towards the specified marker """
-        target_marker_pos = self.get_marker_pos(target_marker)
-        marker = [marker for marker in self.camera.see() if marker.id == target_marker][0]  # Filters markers in camera sight to only show the target marker (filtering to be done before calling the function)
-        firstPass = False
+        Assumptions:
+            - The origin is the corner where the robot starts.
+            - The x-axis direction is 0 radians.
+
+        Parameters:
+            marker_id (int): The ID of the marker.
+
+        Returns:
+            float: The absolute orientation of the marker in radians.
+        """
+        marker = self._get_marker_by_id(marker_id)
+        marker_coords = self.get_marker_pos(marker_id)
+        chi = self._calculate_chi(marker)
+        robot_x, robot_y, robot_theta = self.get_pos()
+        x = self._calculate_x_coordinate(robot_theta, robot_x, marker_coords[1])
+        delta_x = marker_coords[0] - x
+        delta_y = marker_coords[1] - robot_y
+        distance = np.hypot(delta_x, delta_y)
+        if distance == 0:
+            logger.warning("Distance between robot and marker is zero.")
+            z = 0.0
+        else:
+            z = asin((delta_y / distance) * sin(marker.position.horizontal_angle))
+        marker_orientation = z - chi
+        return marker_orientation
+
+    def _calculate_chi(self, marker) -> float:
+        """
+        Calculates the chi angle for marker orientation calculation.
+
+        Parameters:
+            marker: The marker object.
+
+        Returns:
+            float: The chi angle in radians.
+        """
+        marker_yaw = marker.orientation.yaw  # In radians
+        marker_horizontal_angle = marker.position.horizontal_angle  # In radians
+        chi = pi - (marker_yaw + marker_horizontal_angle)
+        return chi
+
+    def _calculate_x_coordinate(self, robot_theta: float, robot_x: float, marker_y: float) -> float:
+        """
+        Calculates the x-coordinate for marker orientation calculation.
+
+        Parameters:
+            robot_theta (float): The robot's orientation angle.
+            robot_x (float): The robot's x-coordinate.
+            marker_y (float): The marker's y-coordinate.
+
+        Returns:
+            float: The calculated x-coordinate.
+        """
+        if not (abs(robot_theta - pi/2) < 1e-5 or abs(robot_theta + pi/2) < 1e-5):
+            x = (marker_y / tan(robot_theta)) + robot_x
+        else:
+            x = robot_x
+        return x
+
+    def _get_marker_by_id(self, marker_id: int):
+        """
+        Retrieves a marker by its ID.
+
+        Parameters:
+            marker_id (int): The ID of the marker.
+
+        Returns:
+            The marker object.
+
+        Raises:
+            ValueError: If the marker is not found.
+        """
+        marker = next((m for m in self.camera.see() if m.id == marker_id), None)
+        if marker is None:
+            logger.error(f"Marker with ID {marker_id} not found.")
+            raise ValueError(f"Marker with ID {marker_id} not found.")
+        return marker
+
+    def _turn_to_marker(self, target_marker_id: int) -> None:
+        """
+        Re-orients the robot to face towards a specified marker.
+
+        Assumes that the robot is standing directly in front of the marker.
+
+        Parameters:
+            target_marker_id (int): The ID of the target marker.
+        """
+        target_marker_pos = np.array(self.get_marker_pos(target_marker_id))
+        marker = self._get_marker_by_id(target_marker_id)
+        self._align_with_marker(marker, target_marker_pos)
+
+    def _align_with_marker(self, marker, target_marker_pos: np.ndarray) -> None:
+        """
+        Aligns the robot with the specified marker.
+
+        Parameters:
+            marker: The marker object.
+            target_marker_pos (np.ndarray): The position of the target marker.
+        """
+        first_pass = False
         theta = marker.position.horizontal_angle
         phi = marker.orientation.yaw
-        angle_pid = PIDController(0, 0.3, 0, 0.1)  # Initialises the PID controller
-        while (phi >= 7 * (pi / 36) and phi <= 11 * (pi / 36)) or not firstPass:
-            firstPass = True
-            angle_tolerance = 0.05  # Initialises the angle tolerance (angle to be fitted witin +- of angle_tolerance)
+        angle_pid = PIDController(setpoint=0, kp=0.3, ki=0, kd=0.1)
+
+        while (7 * pi / 36 <= phi <= 11 * pi / 36) or not first_pass:
+            first_pass = True
+            angle_tolerance = 0.05  # radians
+
             while abs(theta) > angle_tolerance:
-                angle_correction = -angle_pid.getCorrection(theta)
+                angle_correction = -angle_pid.get_correction(theta)
                 ANGLE_TO_TIME = 0.1
-                if angle_correction > 0:  # turn left
+                if angle_correction > 0:
+                    # Turn left
                     self.power((0.4, -0.4), angle_correction / pi * ANGLE_TO_TIME)
-                else:  # turn right
-                    self.power((-0.4, 0.4), angle_correction / pi * -ANGLE_TO_TIME)
-                if len([marker for marker in self.camera.see() if marker.id == target_marker]) > 0:
-                    theta = [marker for marker in self.camera.see() if marker.id == target_marker][0].position.horizontal_angle
+                else:
+                    # Turn right
+                    self.power((-0.4, 0.4), abs(angle_correction) / pi * ANGLE_TO_TIME)
+
+                current_marker = self._get_marker_by_id(marker.id)
+                if current_marker:
+                    theta = current_marker.position.horizontal_angle
                 else:
                     current_position = self.camera_pos()
                     current_coords, phi = current_position[:2], current_position[2]
                     destination_vector = target_marker_pos - current_coords
-                    theta = atan(destination_vector[1] / destination_vector[0])
+                    theta = atan2(destination_vector[1], destination_vector[0])
 
             phi = marker.orientation.yaw
-            if phi >= 7 * (pi / 36) and phi <= 11 * (pi / 36):
-                self.power((-0.4, -0.4), 0.5)
-                self.power((0.4, -0.4), 0.2)
+            if 7 * pi / 36 <= phi <= 11 * pi / 36:
+                self.power((-0.4, -0.4), 0.5, off=False)
+                self.power((0.4, -0.4), 0.2, off=False)
 
-    def camera_pos(self):
-        """ Returns the robot's position in the map based off of wall markers. Maths is kinda complicated but just think of it as triangulation. """
-        # Arena markers that can be seen
-        if self.camera.see():
-            landmarks = [marker for marker in self.camera.see() if marker.id in range(28)]
-            self.blindness = False
-        else:
+    def camera_pos(self) -> Tuple[float, float, float]:
+        """
+        Estimates the robot's position on the map based on visible wall markers.
+
+        Returns:
+            Tuple[float, float, float]: The (x, y, theta) position of the robot.
+        """
+        landmarks = self._get_visible_landmarks()
+        if not landmarks:
             new_robot_pos = self.encoder_pos()
             self._position = new_robot_pos
             self.blindness = True
-            return new_robot_pos #if its true that the encoders arent working and the cameras cant see anything, the position is going to be reliant fully on predictions
+            return new_robot_pos
+        else:
+            self.blindness = False
 
-        # Cumulative orientation (to get average and find orientation)
-        weighted_orientation = 0
+        landmarks = self._handle_wraparound_markers(landmarks)
 
+        robot_orientation = self._calculate_robot_orientation(landmarks)
+        robot_position = self._calculate_robot_position(landmarks)
+
+        new_robot_pos = (robot_position[0], robot_position[1], robot_orientation)
+        self._position = new_robot_pos
+        return new_robot_pos
+
+    def _get_visible_landmarks(self) -> List:
+        """
+        Retrieves visible landmarks (markers) from the camera.
+
+        Returns:
+            List: A list of visible landmarks.
+        """
+        landmarks = [marker for marker in self.camera.see() if 0 <= marker.id < 28]
+        return landmarks
+
+    def _handle_wraparound_markers(self, landmarks: List) -> List:
+        """
+        Adjusts for markers at zone boundaries to handle wraparound.
+
+        Parameters:
+            landmarks (List): The list of visible landmarks.
+
+        Returns:
+            List: The adjusted list of landmarks.
+        """
+        range1, range2 = self._get_zone_ranges()
         # Checks to prevent corner orientation issue
         range1_satisfied = False
         range2_satisfied = False
@@ -139,314 +290,401 @@ class olavesRobot(sr.Robot):
         range2_size = 0
         range1_ids = []
         range2_ids = []
-        match self.zone:
-            case 0:
-                for marker in landmarks:
-                    if marker.id in range(7):
-                        range1_satisfied = True
-                        range1_size += 1
-                        range1_ids.append(marker.id)
-                    if marker.id in range(7, 14):
-                        range2_satisfied = True
-                        range2_size += 1
-                        range2_ids.append(marker.id)
-            case 1:
-                for marker in landmarks:
-                    if marker.id in range(7, 14):
-                        range1_satisfied = True
-                        range1_size += 1
-                        range1_ids.append(marker.id)
-                    if marker.id in range(14, 21):
-                        range2_satisfied = True
-                        range2_size += 1
-                        range2_ids.append(marker.id)
-            case 2:
-                for marker in landmarks:
-                    if marker.id in range(14, 21):
-                        range1_satisfied = True
-                        range1_size += 1
-                        range1_ids.append(marker.id)
-                    if marker.id in range(21, 28):
-                        range2_satisfied = True
-                        range2_size += 1
-                        range2_ids.append(marker.id)
-            case 1:
-                for marker in landmarks:
-                    if marker.id in range(21, 28):
-                        range1_satisfied = True
-                        range1_size += 1
-                        range1_ids.append(marker.id)
-                    if marker.id in range(7):
-                        range2_satisfied = True
-                        range2_size += 1
-                        range2_ids.append(marker.id)
 
-        # Handle wraparound of -π/2 and π at corner
-        corner_predicament = range1_satisfied and range2_satisfied
-        if corner_predicament:
-            print("crisis averted")
+        for marker in landmarks:
+            if marker.id in range1:
+                range1_satisfied = True
+                range1_size += 1
+                range1_ids.append(marker.id)
+            elif marker.id in range2:
+                range2_satisfied = True
+                range2_size += 1
+                range2_ids.append(marker.id)
+
+        # Handle wraparound at zone boundaries
+        if range1_satisfied and range2_satisfied:
+            logger.info("Handling wraparound of markers at zone boundary.")
             if range1_size > range2_size:
-                landmarks = [
-                    special_marker
-                    for special_marker in landmarks
-                    if special_marker.id in range1_ids
-                ]
+                landmarks = [m for m in landmarks if m.id in range1_ids]
             else:
-                landmarks = [
-                    special_marker
-                    for special_marker in landmarks
-                    if special_marker.id in range2_ids
-                ]
+                landmarks = [m for m in landmarks if m.id in range2_ids]
 
-        # Coordinates for each marker
+        return landmarks
+
+    def _calculate_robot_orientation(self, landmarks: List) -> float:
+        """
+        Calculates the robot's orientation based on visible markers.
+
+        Parameters:
+            landmarks (List): The list of visible landmarks.
+
+        Returns:
+            float: The calculated robot orientation in radians.
+        """
+        # Extract coordinates and orientations of landmarks
         landmark_coordinates = np.array([self.coords[marker.id] for marker in landmarks])
-        # Angle for each marker
-        landmark_yaw = np.array([marker.orientation.yaw * -1 for marker in landmarks])
+        landmark_yaws = np.array([-marker.orientation.yaw for marker in landmarks])
 
-        # Calculate orientation from each marker and average
-        for marker in range(len(landmarks)):
-            orientation = landmark_coordinates[marker][2] - landmark_yaw[marker]
+        # Calculate weighted orientation
+        weighted_orientation = 0.0
+        for idx, marker in enumerate(landmarks):
+            orientation = landmark_coordinates[idx][2] - landmark_yaws[idx]
             weighted_orientation += orientation
 
-        robot_orientation = (
-            weighted_orientation / len(landmarks) if len(landmarks) != 0 else self._position[2]
-        )
+        if landmarks:
+            robot_orientation = weighted_orientation / len(landmarks)
+        else:
+            robot_orientation = self._position[2]  # Use the last known orientation
 
-        # Setting pose variables for markers
-        landmark_distance = np.array([marker.position.distance / 1000 for marker in landmarks])
-        landmark_hor_angle = np.array([marker.position.horizontal_angle for marker in landmarks])
+        return robot_orientation
 
-        # Cumulative position to average
-        weighted_pos = np.zeros(2)
+    def _calculate_robot_position(self, landmarks: List) -> Tuple[float, float]:
+        """
+        Calculates the robot's position based on distances and angles to markers.
 
-        # Adjusting set wall orientations to account for different zones
-        wall_orientations: List[range] = [range(0), range(0), range(0), range(0)]
-        wall_orientations[0 - self.zone] = range(7)
-        wall_orientations[1 - self.zone] = range(7, 14)
-        wall_orientations[2 - self.zone] = range(14, 21)
-        wall_orientations[3 - self.zone] = range(21, 28)
+        Parameters:
+            landmarks (List): The list of visible landmarks.
 
-        for marker in range(len(landmarks)):
-            marker_id = landmarks[marker].id
-            distance = landmark_distance[marker]
-            yaw = landmark_yaw[marker]
-            horizontal_angle = -landmark_hor_angle[marker]
-            coords = landmark_coordinates[marker][:2]
-            # Using vector addition to calculate position based on the coordinates of each wall marker
-            if marker_id in wall_orientations[0]:
-                pos = np.array(
-                    (
-                        coords[0] + distance * sin(yaw - horizontal_angle),
-                        coords[1] + distance * cos(yaw - horizontal_angle),
-                    )
-                )
-            elif marker_id in wall_orientations[1]:
-                pos = np.array(
-                    (
-                        coords[0] + distance * cos(yaw - horizontal_angle),
-                        coords[1] - distance * sin(yaw - horizontal_angle),
-                    )
-                )
-            elif marker_id in wall_orientations[2]:
-                pos = np.array(
-                    (
-                        coords[0] - distance * sin(yaw - horizontal_angle),
-                        coords[1] - distance * cos(yaw - horizontal_angle),
-                    )
-                )
-            elif marker_id in wall_orientations[3]:
-                pos = np.array(
-                    (
-                        coords[0] - distance * cos(yaw - horizontal_angle),
-                        coords[1] + distance * sin(yaw - horizontal_angle),
-                    )
-                )
-            weighted_pos += pos
+        Returns:
+            Tuple[float, float]: The calculated (x, y) position of the robot.
+        """
+        weighted_position = np.zeros(2)
+        range1, range2 = self._get_zone_ranges()
+        landmark_coordinates = np.array([self.coords[marker.id] for marker in landmarks])
+        landmark_distances = np.array([marker.position.distance / 1000 for marker in landmarks])
+        landmark_hor_angles = np.array([marker.position.horizontal_angle for marker in landmarks])
+        landmark_yaws = np.array([-marker.orientation.yaw for marker in landmarks])
 
-        # Calculating the average of all the calculated positions to find an optimal estimate for robot position
-        robot_pos = (
-            weighted_pos / len(landmarks)
-            if len(landmarks) != 0
-            else self.encoder_pos()
-        )
+        for idx, marker in enumerate(landmarks):
+            marker_id = marker.id
+            distance = landmark_distances[idx]
+            yaw = landmark_yaws[idx]
+            horizontal_angle = -landmark_hor_angles[idx]
+            coords = landmark_coordinates[idx][:2]
 
-        new_robot_pos = np.array([robot_pos[0], robot_pos[1], robot_orientation])
-        # self._position = new_robot_pos
-        return new_robot_pos
+            if marker_id in range1:
+                pos = np.array([
+                    coords[0] + distance * sin(yaw - horizontal_angle),
+                    coords[1] + distance * cos(yaw - horizontal_angle)
+                ])
+            elif marker_id in range2:
+                pos = np.array([
+                    coords[0] + distance * cos(yaw - horizontal_angle),
+                    coords[1] - distance * sin(yaw - horizontal_angle)
+                ])
+            else:
+                # Default case if marker_id does not fall in any range
+                pos = np.array([coords[0], coords[1]])
 
-    def get_marker_pos(self, marker):
-        """ Finds marker position using vectors. """
+            weighted_position += pos
 
-        # Finds relative distance and angle of marker from camera
-        distance, angle = (marker.position.distance/1000, marker.position.horizontal_angle)
+        if landmarks:
+            robot_pos = weighted_position / len(landmarks)
+        else:
+            robot_pos = np.array(self.encoder_pos()[:2])  # Use the last known position
 
-        # Calculates vector from camera to marker
-        current_x, current_y, theta = self.get_pos()
+        return robot_pos[0], robot_pos[1]
 
-        relative_angle = theta - angle
-        dx, dy = (distance * cos(relative_angle), distance * sin(relative_angle))
+    def _get_zone_ranges(self) -> Tuple[range, range]:
+        """
+        Returns the marker ID ranges for the current zone.
 
-        # Calculates marker position
-        marker_pos = (current_x + dx, current_y + dy)
+        Returns:
+            Tuple[range, range]: The two ranges of marker IDs for the current zone.
+        """
+        if self.zone == 0:
+            return range(0, 7), range(7, 14)
+        elif self.zone == 1:
+            return range(7, 14), range(14, 21)
+        elif self.zone == 2:
+            return range(14, 21), range(21, 28)
+        else:
+            return range(21, 28), range(0, 7)
 
+    def get_marker_pos(self, marker_id: int) -> Tuple[float, float]:
+        """
+        Calculates the absolute position of a marker based on its relative position to the robot.
+
+        Parameters:
+            marker_id (int): The ID of the marker.
+
+        Returns:
+            Tuple[float, float]: The (x, y) position of the marker.
+        """
+        marker = self._get_marker_by_id(marker_id)
+        distance = marker.position.distance / 1000  # Convert to meters
+        angle = marker.position.horizontal_angle  # Radians
+
+        robot_x, robot_y, robot_theta = self.get_pos()
+        relative_angle = robot_theta - angle
+        dx = distance * cos(relative_angle)
+        dy = distance * sin(relative_angle)
+
+        marker_pos = (robot_x + dx, robot_y + dy)
         return marker_pos
 
-    def move_to_marker(self, marker_id):
-        """ Moves the robot to a specified marker and orients the robot appropriately. """
-        marker_orientation = self.get_marker_orientation(marker_id) # get_marker_orientation to be coded by Kirollos (shout at him if he hasn't done it yet)
-        point_coords = self.get_marker_pos(marker_id)[0] + 0.5*cos(marker_orientation), self.get_marker_pos(marker_id)[1] + 0.5*sin(marker_orientation)
+    def move_to_marker(self, marker_id: int) -> None:
+        """
+        Moves the robot to a specified marker and orients it appropriately.
+
+        Parameters:
+            marker_id (int): The ID of the target marker.
+        """
+        marker_orientation = self.get_marker_orientation(marker_id)
+        marker_pos = np.array(self.get_marker_pos(marker_id))
+        point_coords = (
+            marker_pos[0] + 0.5 * cos(marker_orientation),
+            marker_pos[1] + 0.5 * sin(marker_orientation)
+        )
         self.move_through_path(point_coords)
 
-        target_orientation = marker_orientation + pi if marker_orientation < 0 else marker_orientation-pi
+        target_orientation = marker_orientation + pi if marker_orientation < 0 else marker_orientation - pi
         self.set_robot_orientation(theta=target_orientation, phi=self.get_pos()[2])
 
-    def get_pos(self):
-        """ Returns robot position, basically just a decorator as it's an easier function name to remember. """
+    def get_pos(self) -> Tuple[float, float, float]:
+        """
+        Retrieves the current position of the robot.
+
+        Returns:
+            Tuple[float, float, float]: The (x, y, theta) position of the robot.
+        """
         return self.camera_pos()
 
-    def set_robot_orientation(self, theta, phi):
-        """ Sets the robot orientation to a specified value. """
-        angle_tolerance = 0.1
-        angle_pid = PIDController(theta, 1.5, 0, 0.75)
+    def set_robot_orientation(self, theta: float, phi: float) -> None:
+        """
+        Sets the robot's orientation to a specified angle.
+
+        Parameters:
+            theta (float): The target orientation angle in radians.
+            phi (float): The current orientation angle in radians.
+        """
+        angle_tolerance = 0.1  # radians
+        angle_pid = PIDController(setpoint=theta, kp=1.5, ki=0, kd=0.75)
+
         while abs(theta - phi) > angle_tolerance:
-            angle_correction = -angle_pid.getCorrection(phi)
+            angle_correction = -angle_pid.get_correction(phi)
             ANGLE_TO_TIME = 0.1
-            if angle_correction > 0:  # turn left
+            if angle_correction > 0:
+                # Turn left
                 self.power((0.4, -0.4), angle_correction / pi * ANGLE_TO_TIME)
-            else:  # turn right
-                self.power((-0.4, 0.4), angle_correction / pi * -ANGLE_TO_TIME)
+            else:
+                # Turn right
+                self.power((-0.4, 0.4), abs(angle_correction) / pi * ANGLE_TO_TIME)
 
             phi = self.get_pos()[2]
 
-    def move_through_path(self, target_position, tolerance=0):
-        try:
-            start_pos = self.camera_pos()
-            print("hello")  # Koby's contribution
-
-            start_x_coord_id = sorted(
-                self.resolution_idx, key=cmp_to_key(lambda a, b: a[1] - start_pos[0])
-            )[0][0]
-            start_y_coord_id = sorted(
-                self.resolution_idx, key=cmp_to_key(lambda a, b: a[1] - start_pos[1])
-            )[0][0]
-
-            
-
-            target_x_coord_id = sorted(
-                self.resolution_idx, key=cmp_to_key(lambda a, b: a[1] - target_position[0])
-            )[0][0]
-            target_y_coord_id = sorted(
-                self.resolution_idx, key=cmp_to_key(lambda a, b: a[1] - target_position[1])
-            )[0][0]
-
-            start_coordinates = (
-                self.resolution_idx[start_x_coord_id][1],
-                self.resolution_idx[start_y_coord_id][1],
-            )
-            target_coordinates = (
-                self.resolution_idx[target_x_coord_id][1],
-                self.resolution_idx[target_y_coord_id][1],
-            )
-
-            print(start_coordinates, target_coordinates)
-
-            path = pathfinding(graph=self.map_graph, start=start_coordinates, end=target_coordinates)
-            path.append(target_position)
-            print(path)
-            flag = False
-            for i in range(tolerance):
-                path.pop()
-                flag = True
-            for point in path:
-                print(point)
-                self.move_pos(point)
-
-            if flag:
-                self.move_pos(
-                    target_position
-                )  # Possibly switch to a dedicated move_to_marker func or call a state idk
-        except:
-            print("uh oh")
-            self.move_pos(target_position=target_position)
-
-    def move_pos(self, target_position):
-        current_position = self.get_pos()
-        current_coords, phi = current_position[:2], current_position[2]
-        print("target_pos", type(target_position))
-        print("current_pos", type(current_position))
-        print("target_pos", (target_position))
-        print("current_pos", (current_position))
-        destination_vector = target_position - current_coords
-        theta = atan(destination_vector[1] / destination_vector[0])
-        distance = (destination_vector[0] ** 2 + destination_vector[1] ** 2) ** 0.5
-        print("theta", theta)
-        print("dist", distance)
-
-        if destination_vector[0] < 0:
-            if destination_vector[1] < 0:
-                theta -= pi
-            else:
-                theta += pi
-
-        angle_pid = PIDController(theta, 1.5, 0, 0.75)
-        distance_pid = PIDController(0, 0.5, 0.2, 0.5)
-        while abs(distance) > 0.2:
-            current_position = self.get_pos()
-            current_coords, phi = current_position[:2], current_position[2]
-            destination_vector = target_position - current_coords
-            theta = atan(destination_vector[1] / destination_vector[0])
-            distance = (destination_vector[0] ** 2 + destination_vector[1] ** 2) ** 0.5
-
-            if destination_vector[0] < 0:
-                if destination_vector[1] < 0:
-                    theta -= pi
-                else:
-                    theta += pi
-
-            distance_correction = -distance_pid.getCorrection(distance) * 0.2
-            angle_correction = -angle_pid.getCorrection(phi)
-
-            left = distance_correction - angle_correction
-            right = distance_correction + angle_correction
-
-            # Clamps to 1 or -1 if outside bounds
-            def clamp(n: float) -> float:
-                return n if abs(n) < 1 else 1 * n / abs(n)
-
-            # scales the values to around 0.5, relative to each other
-            def shrink(a: float, b: float) -> float:
-                return a / (abs(a) + abs(b))
-
-            clampedLeft = clamp(shrink(left, right) * 2)
-            clampedRight = clamp(shrink(right, left) * 2)
-
-            print("clamped", clampedLeft, clampedRight)
-            DIST_TO_TIME = 0.1
-            if distance_correction > 0:
-                self.power(
-                    (0.4 * clampedLeft, 0.4 * clampedRight),
-                    distance_correction * DIST_TO_TIME,
-                off = False)
-            else:
-                self.power(
-                    (-0.4 * clampedLeft, -0.4 * clampedRight),
-                    -distance_correction * DIST_TO_TIME,
-                off = False)
-
-    def power(self, wheels: Tuple[float, float], time: float, off: bool = True):
-        """Used to control the motors.
+    def move_through_path(self, target_position: Tuple[float, float], tolerance: int = 0) -> None:
+        """
+        Navigates the robot through a calculated path to the target position.
 
         Parameters:
-            wheels (Tuple): The first element controls the left wheel's direction and the second element controls the right wheel's direction. 1 means go forward, 0 means stay still and -1 means go backwards.
-            time (float): The amount of time the motors should be on for.
-            power (float) = 0.8: The power setting of the motor.
+            target_position (Tuple[float, float]): The (x, y) coordinates of the target position.
+            tolerance (int): Number of waypoints to ignore from the end of the path.
         """
-        wheels = self.wonky_wheels_correction(wheels)
+        try:
+            path = self._calculate_path(target_position)
+            self._execute_path(path, target_position, tolerance)
+        except ValueError as e:
+            logger.error(f"ValueError in move_through_path: {e}")
+            self.move_pos(target_position)
+        except Exception as e:
+            logger.error(f"Unexpected error in move_through_path: {e}")
+            self.move_pos(target_position)
+
+    def _calculate_path(self, target_position: Tuple[float, float]) -> List[Tuple[float, float]]:
+        """
+        Calculates the path from the current position to the target position.
+
+        Parameters:
+            target_position (Tuple[float, float]): The (x, y) coordinates of the target position.
+
+        Returns:
+            List[Tuple[float, float]]: The calculated path as a list of waypoints.
+        """
+        start_pos = np.array(self.camera_pos())
+
+        start_x_coord_id = min(
+            self.resolution_idx, key=lambda a: abs(a[1] - start_pos[0])
+        )[0]
+        start_y_coord_id = min(
+            self.resolution_idx, key=lambda a: abs(a[1] - start_pos[1])
+        )[0]
+
+        target_x_coord_id = min(
+            self.resolution_idx, key=lambda a: abs(a[1] - target_position[0])
+        )[0]
+        target_y_coord_id = min(
+            self.resolution_idx, key=lambda a: abs(a[1] - target_position[1])
+        )[0]
+
+        start_coordinates = (
+            self.resolution_idx[start_x_coord_id][1],
+            self.resolution_idx[start_y_coord_id][1],
+        )
+        target_coordinates = (
+            self.resolution_idx[target_x_coord_id][1],
+            self.resolution_idx[target_y_coord_id][1],
+        )
+
+        logger.info(f"Start Coordinates: {start_coordinates}, Target Coordinates: {target_coordinates}")
+
+        path = pathfinding(graph=self.map_graph, start=start_coordinates, end=target_coordinates)
+        path.append(target_position)
+
+        logger.debug(f"Calculated Path: {path}")
+        return path
+
+    def _execute_path(self, path: List[Tuple[float, float]], target_position: Tuple[float, float], tolerance: int) -> None:
+        """
+        Executes the movement along the calculated path.
+
+        Parameters:
+            path (List[Tuple[float, float]]): The calculated path as a list of waypoints.
+            target_position (Tuple[float, float]): The (x, y) coordinates of the target position.
+            tolerance (int): Number of waypoints to ignore from the end of the path.
+        """
+        # Remove waypoints based on tolerance
+        for _ in range(tolerance):
+            if path:
+                path.pop()
+        
+        for point in path:
+            logger.debug(f"Moving to point: {point}")
+            self.move_pos(point)
+
+        if tolerance > 0 and path:
+            logger.debug(f"Final move to target position: {target_position}")
+            self.move_pos(target_position)
+
+    def move_pos(self, target_position: Tuple[float, float]) -> None:
+        """
+        Moves the robot to a specific position using PID controllers for angle and distance.
+
+        Parameters:
+            target_position (Tuple[float, float]): The (x, y) coordinates to move to.
+        """
+        logger.info(f"Moving to position: {target_position}")
+
+        while True:
+            current_position = np.array(self.get_pos())
+            distance, theta = self._calculate_distance_and_angle(current_position, target_position)
+
+            if distance <= 0.2:
+                logger.info("Reached the target position.")
+                break
+
+            left_power, right_power = self._calculate_movement_corrections(distance, theta, current_position[2])
+
+            self._apply_motor_powers(left_power, right_power, distance)
+
+    def _calculate_distance_and_angle(self, current_position: np.ndarray, target_position: Tuple[float, float]) -> Tuple[float, float]:
+        """
+        Calculates the distance and angle to the target position.
+
+        Parameters:
+            current_position (np.ndarray): The current position of the robot.
+            target_position (Tuple[float, float]): The target position.
+
+        Returns:
+            Tuple[float, float]: The distance and angle to the target.
+        """
+        destination_vector = np.array(target_position) - current_position[:2]
+        distance = np.linalg.norm(destination_vector)
+        theta = atan2(destination_vector[1], destination_vector[0])
+        return distance, theta
+
+    def _calculate_movement_corrections(self, distance: float, theta: float, current_theta: float) -> Tuple[float, float]:
+        """
+        Calculates the motor power corrections using PID controllers.
+
+        Parameters:
+            distance (float): The distance to the target.
+            theta (float): The angle to the target.
+            current_theta (float): The current orientation of the robot.
+
+        Returns:
+            Tuple[float, float]: The left and right motor power corrections.
+        """
+        angle_pid = PIDController(setpoint=theta, kp=1.5, ki=0.0, kd=0.75)
+        distance_pid = PIDController(setpoint=0.0, kp=0.5, ki=0.2, kd=0.5)
+
+        angle_correction = -angle_pid.get_correction(current_theta)
+        distance_correction = -distance_pid.get_correction(distance) * 0.2
+
+        left_power = distance_correction - angle_correction
+        right_power = distance_correction + angle_correction
+
+        # Clamp motor power values to [-1.0, 1.0]
+        left_power = self._clamp(left_power * 2)
+        right_power = self._clamp(right_power * 2)
+
+        logger.debug(f"Motor Powers - Left: {left_power}, Right: {right_power}")
+        return left_power, right_power
+
+    def _apply_motor_powers(self, left_power: float, right_power: float, distance: float) -> None:
+        """
+        Applies motor powers to move the robot.
+
+        Parameters:
+            left_power (float): The power for the left motor.
+            right_power (float): The power for the right motor.
+            distance (float): The distance to the target.
+        """
+        distance_correction = abs(distance) * 0.1
+
+        if distance > 0:
+            self.power((0.4 * left_power, 0.4 * right_power), distance_correction, off=False)
+        else:
+            self.power((-0.4 * left_power, -0.4 * right_power), distance_correction, off=False)
+
+    def power(self, wheels: Tuple[float, float], duration: float, off: bool = True) -> None:
+        """
+        Controls the motors by setting their power levels.
+
+        Parameters:
+            wheels (Tuple[float, float]): 
+                - First element controls the left wheel's power.
+                - Second element controls the right wheel's power.
+                Positive values move the wheel forward, negative values move it backward.
+            duration (float): The duration in seconds for which the motors should run.
+            off (bool): Whether to turn off the motors after the duration. Defaults to True.
+        """
+        wheels = self._wonky_wheels_correction(wheels)
         self._prev_power = wheels
-        self.motor_board.motors[0].power = wheels[0]
-        self.motor_board.motors[1].power = wheels[1]
-        self.sleep(time)
+        self.motor_board.motors[0].power = self._clamp(wheels[0])
+        self.motor_board.motors[1].power = self._clamp(wheels[1])
+        self.sleep(duration)
         if off:
-            self.motor_board.motors[0].power = 0
-            self.motor_board.motors[1].power = 0
+            self.motor_board.motors[0].power = 0.0
+            self.motor_board.motors[1].power = 0.0
             self.sleep(0.01)
+
+    @staticmethod
+    def _clamp(value: float, min_value: float = -1.0, max_value: float = 1.0) -> float:
+        """
+        Clamps a value to the specified range.
+
+        Parameters:
+            value (float): The value to clamp.
+            min_value (float): The minimum allowable value. Defaults to -1.0.
+            max_value (float): The maximum allowable value. Defaults to 1.0.
+
+        Returns:
+            float: The clamped value.
+        """
+        return max(min_value, min(max_value, value))
+
+    def _wonky_wheels_correction(self, wheels: Tuple[float, float]) -> Tuple[float, float]:
+        """
+        Applies correction to the wheel power values.
+
+        This method can be customized to correct any discrepancies in wheel behavior.
+
+        Parameters:
+            wheels (Tuple[float, float]): The raw wheel power values.
+
+        Returns:
+            Tuple[float, float]: The corrected wheel power values.
+        """
+        # Placeholder for any correction logic
+        return wheels
