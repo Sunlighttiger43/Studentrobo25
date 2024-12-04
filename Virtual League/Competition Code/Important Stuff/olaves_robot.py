@@ -688,3 +688,41 @@ class OlavesRobot(sr.Robot):
         """
         # Placeholder for any correction logic
         return wheels
+
+    def getMarkerType(self, marker: object|int) -> str:
+        """
+        Takes in a marker object or ID and returns what type of marker it is
+
+        Parameters:
+            marker (object|int): The marker object or raw marker ID integer
+
+        Returns
+            String: The type of marker it is from:
+                - wall: 0-27
+                - pallet0: 100-119
+                - pallet1: 120-139
+                - pallet2: 140-159
+                - pallet3: 160-179
+                - highrise: 195-199
+                (None otherwise)
+        """
+        if type(marker) == object:
+            id = marker.id
+        else:
+            id = marker
+        match id:
+            case id if id >= 0 and id <= 27:
+                return 'wall'
+            case id if id >= 100 and id <= 119:
+                return 'pallet0'
+            case id if id >= 120 and id <= 139:
+                return 'pallet1'
+            case id if id >= 140 and id <= 159:
+                return 'pallet2'
+            case id if id >= 160 and id <= 179:
+                return 'pallet3'
+            case id if id >= 195 and id <= 199:
+                return 'highrise'
+            case _:
+                return None
+            
