@@ -26,6 +26,10 @@ class Hunting(State):
 class Knocking(State):
     pass
 
+class Unused(State):
+    #testing purposes only
+    pass
+
 def main() -> None:
     r = OlavesRobot()
     print("Running")
