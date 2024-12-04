@@ -4,9 +4,9 @@ from typing import List, Tuple, Optional
 from pid import PIDController
 import numpy as np
 from time import time
-from utils.graph import pathfinding
 import pickle
 import logging
+import heapq
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +36,7 @@ class OlavesRobot(sr.Robot):
         try:
             with open("maps/map.pkl", "rb") as f:
                 self.arena_map = pickle.load(f)
-            with open("maps/graph.pkl", "rb") as f:
+            with open("maps/graph_adj.pkl", "rb") as f:
                 self.map_graph = pickle.load(f)
             with open('maps/wall_marker_coords.pkl', "rb") as f:
                 all_coords = pickle.load(f)
@@ -528,11 +528,41 @@ class OlavesRobot(sr.Robot):
 
         logger.info(f"Start Coordinates: {start_coordinates}, Target Coordinates: {target_coordinates}")
 
-        path = pathfinding(graph=self.map_graph, start=start_coordinates, end=target_coordinates)
+        path, _ = self._pathfinding(graph=self.map_graph, start=start_coordinates, end=target_coordinates)
         path.append(target_position)
 
         logger.debug(f"Calculated Path: {path}")
         return path
+
+    def _pathfinding(self, graph, start, end):
+        queue = []
+        heapq.heappush(queue, (0, start))
+        
+        costs = {node: float('inf') for node in graph}
+        costs[start] = 0
+        
+        previous = {node: None for node in graph}
+        
+        while queue:
+            current_cost, current_node = heapq.heappop(queue)
+            
+            if current_node == end:
+                break
+            
+            for neighbor, weight in graph[current_node]:
+                path_cost = current_cost + weight
+                if path_cost < costs[neighbor]:
+                    costs[neighbor] = path_cost
+                    previous[neighbor] = current_node
+                    heapq.heappush(queue, (path_cost, neighbor))
+        
+        path = []
+        node = end
+        if previous[node] is not None or node == start:
+            while node is not None:
+                path.insert(0, node)
+                node = previous[node]
+        return path, costs[end]
 
     def _execute_path(self, path: List[Tuple[float, float]], target_position: Tuple[float, float], tolerance: int) -> None:
         """
@@ -725,4 +755,3 @@ class OlavesRobot(sr.Robot):
                 return 'highrise'
             case _:
                 return None
-            
