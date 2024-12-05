@@ -22,7 +22,10 @@ class StateMachine:
 
 class Hunting(State):
     #Idea is to get marker distance as well as ID and make judgments based upon it
-    pass
+    def seeing(self):
+        markers = robot.camera.see()
+        for marker in markers:
+            print(marker.id, marker.position.distance/1000)
 
 class Knocking(State):
     pass
