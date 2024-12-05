@@ -28,11 +28,15 @@ class Knocking(State):
 
 class Unused(State):
     #testing purposes only
-    pass
+    def run(self):
+        while True:
+            self.r.sleep(2)
+            print(self.r.get_pos())
+
 
 def main() -> None:
     r = OlavesRobot()
     print("Running")
     print(r.zone)
 
-    StateMachine(Hunting(r)).run()
+    StateMachine(Unused(r)).run()
