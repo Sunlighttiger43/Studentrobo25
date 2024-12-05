@@ -21,6 +21,7 @@ class StateMachine:
         print("Ran All")
 
 class Hunting(State):
+    #Idea is to get marker distance as well as ID and make judgments based upon it
     pass
 
 class Knocking(State):
