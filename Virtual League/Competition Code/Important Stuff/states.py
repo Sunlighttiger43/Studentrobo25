@@ -24,8 +24,12 @@ class Hunting(State):
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
         markers = robot.camera.see()
+        OurMarkers = {}
         for marker in markers:
-            print(marker.id, marker.position.distance/1000)
+            if marker.id >= 100 and marker.id<= 119:
+                OurMarkers[marker.id] = marker.position.distance
+        return OurMarkers
+
 
 class Knocking(State):
     pass
