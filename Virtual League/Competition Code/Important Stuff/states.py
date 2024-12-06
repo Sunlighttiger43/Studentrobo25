@@ -31,8 +31,11 @@ class Hunting(State):
         return OurMarkers
 
     def judgement_of_distances(self, OurMarkers):
-        #Intention here is to use the dictionary/listed created in teh seeing method and be able to judge the shortest distances and be able to confirm which pallet we are going to
-        pass
+        #Judges which marker is the closest
+        SortedMarkers = sorted(OurMarkers.items(), key=lambda x:x[1])
+        return SortedMarkers[0][0]
+    #We need to routinely update the shortest list because it'll change when you move to each marker
+
 
 class Knocking(State):
     pass
