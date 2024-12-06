@@ -29,6 +29,10 @@ class StateMachine:
 
 
 class Hunting(State):
+
+    def __init__(self, robot: OlavesRobot):
+        super().__init__(robot)
+        self.time = OlavesRobot.get_comp_time
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
         markers = robot.camera.see()
@@ -46,7 +50,8 @@ class Hunting(State):
     def go_to_marker(self,marker):
         OlavesRobot._turn_to_marker(self,marker)
 
-    def _get_hunting_time(self)
+    def _get_hunting_time(self, self.time):
+        pass 
         
 
 class Knocking(State):
