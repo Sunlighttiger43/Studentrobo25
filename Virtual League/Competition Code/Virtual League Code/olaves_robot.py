@@ -7,6 +7,9 @@ from time import time
 import pickle
 import logging
 import heapq
+from scipy.optimize import least_squares
+from utils.zone_coords import zone_coords
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -356,8 +359,8 @@ class OlavesRobot(sr.Robot):
             mx, my, _ = zone_coords[self.zone][m.id]
 
             # Predicted positions
-            pred_mx = rx + d * math.cos(rtheta + alpha)
-            pred_my = ry + d * math.sin(rtheta + alpha)
+            pred_mx = rx + d * cos(rtheta + alpha)
+            pred_my = ry + d * sin(rtheta + alpha)
 
             # Add residuals (difference)
             residuals.append(pred_mx - mx)
