@@ -237,155 +237,7 @@ class OlavesRobot(sr.Robot):
                 self.power((-0.4, -0.4), 0.5, off=False)
                 self.power((0.4, -0.4), 0.2, off=False)
 
-    def camera_pos(self) -> Tuple[float, float, float]:
-        """
-        Estimates the robot's position on the map based on visible wall markers.
 
-        Returns:
-            Tuple[float, float, float]: The (x, y, theta) position of the robot.
-        """
-        landmarks = self._get_visible_landmarks()
-        if not landmarks:
-            new_robot_pos = self.encoder_pos()
-            self._position = new_robot_pos
-            self.blindness = True
-            return new_robot_pos
-        else:
-            self.blindness = False
-
-        landmarks = self._handle_wraparound_markers(landmarks)
-
-        robot_orientation = self._calculate_robot_orientation(landmarks)
-        robot_position = self._calculate_robot_position(landmarks)
-
-        new_robot_pos = (robot_position[0], robot_position[1], robot_orientation)
-        self._position = new_robot_pos
-        return new_robot_pos
-
-    def _get_visible_landmarks(self) -> List:
-        """
-        Retrieves visible landmarks (markers) from the camera.
-
-        Returns:
-            List: A list of visible landmarks.
-        """
-        landmarks = [marker for marker in self.camera.see() if 0 <= marker.id < 28]
-        return landmarks
-
-    def _handle_wraparound_markers(self, landmarks: List) -> List:
-        """
-        Adjusts for markers at zone boundaries to handle wraparound.
-
-        Parameters:
-            landmarks (List): The list of visible landmarks.
-
-        Returns:
-            List: The adjusted list of landmarks.
-        """
-        range1, range2 = self._get_zone_ranges()
-        # Checks to prevent corner orientation issue
-        range1_satisfied = False
-        range2_satisfied = False
-        range1_size = 0
-        range2_size = 0
-        range1_ids = []
-        range2_ids = []
-
-        for marker in landmarks:
-            if marker.id in range1:
-                range1_satisfied = True
-                range1_size += 1
-                range1_ids.append(marker.id)
-            elif marker.id in range2:
-                range2_satisfied = True
-                range2_size += 1
-                range2_ids.append(marker.id)
-
-        # Handle wraparound at zone boundaries
-        if range1_satisfied and range2_satisfied:
-            logger.info("Handling wraparound of markers at zone boundary.")
-            if range1_size > range2_size:
-                landmarks = [m for m in landmarks if m.id in range1_ids]
-            else:
-                landmarks = [m for m in landmarks if m.id in range2_ids]
-
-        return landmarks
-
-    def _calculate_robot_orientation(self, landmarks: List) -> float:
-        """
-        Calculates the robot's orientation based on visible markers.
-
-        Parameters:
-            landmarks (List): The list of visible landmarks.
-
-        Returns:
-            float: The calculated robot orientation in radians.
-        """
-        # Extract coordinates and orientations of landmarks
-        landmark_coordinates = np.array([self.coords[marker.id] for marker in landmarks])
-        landmark_yaws = np.array([-marker.orientation.yaw for marker in landmarks])
-
-        # Calculate weighted orientation
-        weighted_orientation = 0.0
-        for idx, marker in enumerate(landmarks):
-            orientation = landmark_coordinates[idx][2] - landmark_yaws[idx]
-            weighted_orientation += orientation
-
-        if landmarks:
-            robot_orientation = weighted_orientation / len(landmarks)
-        else:
-            robot_orientation = self._position[2]  # Use the last known orientation
-
-        return robot_orientation
-
-    def _calculate_robot_position(self, landmarks: List) -> Tuple[float, float]:
-        """
-        Calculates the robot's position based on distances and angles to markers.
-
-        Parameters:
-            landmarks (List): The list of visible landmarks.
-
-        Returns:
-            Tuple[float, float]: The calculated (x, y) position of the robot.
-        """
-        weighted_position = np.zeros(2)
-        range1, range2 = self._get_zone_ranges()
-        landmark_coordinates = np.array([self.coords[marker.id] for marker in landmarks])
-        landmark_distances = np.array([marker.position.distance / 1000 for marker in landmarks])
-        landmark_hor_angles = np.array([marker.position.horizontal_angle for marker in landmarks])
-        landmark_yaws = np.array([-marker.orientation.yaw for marker in landmarks])
-
-        for idx, marker in enumerate(landmarks):
-            marker_id = marker.id
-            distance = landmark_distances[idx]
-            yaw = landmark_yaws[idx]
-            horizontal_angle = -landmark_hor_angles[idx]
-            coords = landmark_coordinates[idx][:2]
-
-            if marker_id in range1:
-                pos = np.array([
-                    coords[0] + distance * sin(yaw - horizontal_angle),
-                    coords[1] + distance * cos(yaw - horizontal_angle)
-                ])
-            elif marker_id in range2:
-                pos = np.array([
-                    coords[0] + distance * cos(yaw - horizontal_angle),
-                    coords[1] - distance * sin(yaw - horizontal_angle)
-                ])
-            else:
-                # Default case if marker_id does not fall in any range
-                pos = np.array([coords[0], coords[1]])
-
-            weighted_position += pos
-
-        if landmarks:
-            robot_pos = weighted_position / len(landmarks)
-        else:
-            robot_pos = np.array(self.encoder_pos()[:2])  # Use the last known position
-
-        return robot_pos[0], robot_pos[1]
-
-    def _get_zone_ranges(self) -> Tuple[range, range]:
         """
         Returns the marker ID ranges for the current zone.
 
@@ -441,7 +293,77 @@ class OlavesRobot(sr.Robot):
         target_orientation = marker_orientation + pi if marker_orientation < 0 else marker_orientation - pi
         self.set_robot_orientation(theta=target_orientation, phi=self.get_pos()[2])
 
-    def get_pos(self) -> Tuple[float, float, float]:
+    def get_pos(self, test_markers=None):
+        """
+        Estimate the robot's position (rx, ry) and orientation rtheta.
+        
+        :param test_markers: If provided, use these marker observations instead of camera input.
+                             This is useful for testing.
+
+        :return: (rx, ry, rtheta) or None if insufficient markers are visible.
+        """
+        # Stop movement to avoid blurry images
+        # self.stop()
+
+        # Get markers from camera if no markers are provided (useful for testing)
+        markers = test_markers if test_markers is not None else self.camera.see()
+
+        # Filter for arena boundary markers (ID 0-27)
+        arena_markers = [m for m in markers if 0 <= m.id <= 27]
+
+        # We need at least two markers to solve for position and heading
+        if len(arena_markers) < 2:
+            return None
+
+        # Set initial guesses for the solver
+        initial_guess = [1.0, 1.0, 0.0]  # (rx_guess, ry_guess, rtheta_guess)
+
+        # Run the least squares solver
+        result = least_squares(
+            fun=lambda params: self._residuals(params, arena_markers),
+            x0=initial_guess
+        )
+
+        # Extract solution
+        rx, ry, rtheta = result.x
+        return rx, ry, rtheta
+
+    def _residuals(self, params, markers):
+        """
+        Compute residuals for the least squares problem.
+        
+        Equations:
+        For each marker, given known (mx, my) and measured distance d and angle alpha:
+        mx = rx + d*cos(rtheta + alpha)
+        my = ry + d*sin(rtheta + alpha)
+
+        Residuals are the difference between predicted and actual marker positions.
+        
+        :param params: [rx, ry, rtheta]
+        :param markers: list of observed markers
+        :return: list of residuals
+        """
+        rx, ry, rtheta = params
+        residuals = []
+
+        for m in markers:
+            # Convert distance from mm to m
+            d = m.position.distance / 1000.0
+            alpha = m.position.horizontal_angle
+
+            # Get known global position of this marker
+            # Replace 0 with self.zone
+            mx, my, _ = zone_coords[self.zone][m.id]
+
+            # Predicted positions
+            pred_mx = rx + d * math.cos(rtheta + alpha)
+            pred_my = ry + d * math.sin(rtheta + alpha)
+
+            # Add residuals (difference)
+            residuals.append(pred_mx - mx)
+            residuals.append(pred_my - my)
+
+        return residuals
         """
         Retrieves the current position of the robot.
 
