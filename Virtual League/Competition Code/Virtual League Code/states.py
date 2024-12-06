@@ -1,8 +1,10 @@
 #robot states
+
 from abc import ABC, abstractmethod
 import numpy as np
 from olaves_robot import OlavesRobot
 from math import pi, sin, cos, floor, atan, tan
+my_power_board=OlavesRobot.power_board
 
 class State(ABC):
     def __init__(self, robot: OlavesRobot):
@@ -19,9 +21,18 @@ class StateMachine:
             print("Running:", type(state).__name__)
             state = state.run()
         print("Ran All")
-    
+    def Attacking(self):
+        pass
+
+    def Defending(self):
+        pass
+
 
 class Hunting(State):
+
+    def __init__(self, robot: OlavesRobot):
+        super().__init__(robot)
+        self.time = robot.get_comp_time():
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
         markers = robot.camera.see()
@@ -36,7 +47,25 @@ class Hunting(State):
         SortedMarkers = sorted(OurMarkers.items(), key=lambda x:x[1])
         return SortedMarkers[0][0]
     #We need to routinely update the shortest list because it'll change when you move to each marker
-    
+
+    #Input is a list that contains marker id and marker distance - and this comes from the sorted markers
+    def go_to_marker(self,marker):
+        #Navigation to the marker given that we know which box to target
+        OlavesRobot._turn_to_marker(self,marker)
+        markerID = marker[0]
+        OlavesRovot.move_to_marker(markerID)
+        
+    def Pick_Box(self, marker):
+        #defining how to pick up the actual box
+        pass
+
+
+    def _get_hunting_time(self, ):
+        self.new_time = robot.get_comp_time():
+        return self.new_time - self.time
+        # finds the difference in time since state has occured and present time
+
+        
 
 class Knocking(State):
     pass
@@ -55,3 +84,4 @@ def main() -> None:
     print(r.zone)
 
     StateMachine(Unused(r)).run()
+
