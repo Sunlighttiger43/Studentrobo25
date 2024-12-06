@@ -32,10 +32,10 @@ class Hunting(State):
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
         markers = robot.camera.see()
-        OurMarkers = {}
+        OurMarkers = []
         for marker in markers:
             if marker.id >= 100 and marker.id<= 119:
-                OurMarkers[marker.id] = marker.position.distance
+                OurMarkers.append([marker.id, marker.position.distance])
         return OurMarkers
 
     def judgement_of_distances(self, OurMarkers):
@@ -45,6 +45,8 @@ class Hunting(State):
     #We need to routinely update the shortest list because it'll change when you move to each marker
     def go_to_marker(self,marker):
         OlavesRobot._turn_to_marker(self,marker)
+
+    def _get_hunting_time(self)
         
 
 class Knocking(State):
@@ -64,3 +66,4 @@ def main() -> None:
     print(r.zone)
 
     StateMachine(Unused(r)).run()
+
