@@ -51,6 +51,7 @@ class Hunting(State):
         OlavesRobot._turn_to_marker(self,marker)
 
     def _get_hunting_time(self, self.time):
+        #this will keep track of the time the robot is in the hunting state.
         pass 
         
 
