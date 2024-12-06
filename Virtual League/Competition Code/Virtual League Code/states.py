@@ -55,7 +55,6 @@ class Hunting(State):
         return self.new_time - self.time
         # finds the difference in time since state has occured and present time
 
-        pass 
         
 
 class Knocking(State):
