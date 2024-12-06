@@ -1,8 +1,10 @@
 #robot states
+
 from abc import ABC, abstractmethod
 import numpy as np
 from olaves_robot import OlavesRobot
 from math import pi, sin, cos, floor, atan, tan
+my_power_board=OlavesRobot.power_board
 
 class State(ABC):
     def __init__(self, robot: OlavesRobot):
@@ -19,16 +21,21 @@ class StateMachine:
             print("Running:", type(state).__name__)
             state = state.run()
         print("Ran All")
-    
+    def Attacking(self):
+        pass
+
+    def Defending(self):
+        pass
+
 
 class Hunting(State):
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
         markers = robot.camera.see()
-        OurMarkers = []
+        OurMarkers = {}
         for marker in markers:
             if marker.id >= 100 and marker.id<= 119:
-                OurMarkers.append([marker.id, marker.position.distance])
+                OurMarkers[marker.id] = marker.position.distance
         return OurMarkers
 
     def judgement_of_distances(self, OurMarkers):
@@ -36,7 +43,9 @@ class Hunting(State):
         SortedMarkers = sorted(OurMarkers.items(), key=lambda x:x[1])
         return SortedMarkers[0][0]
     #We need to routinely update the shortest list because it'll change when you move to each marker
-    
+    def go_to_marker(self,marker):
+        OlavesRobot._turn_to_marker(self,marker)
+        
 
 class Knocking(State):
     pass
