@@ -47,8 +47,18 @@ class Hunting(State):
         SortedMarkers = sorted(OurMarkers.items(), key=lambda x:x[1])
         return SortedMarkers[0][0]
     #We need to routinely update the shortest list because it'll change when you move to each marker
+
+    #Input is a list that contains marker id and marker distance - and this comes from the sorted markers
     def go_to_marker(self,marker):
+        #Navigation to the marker given that we know which box to target
         OlavesRobot._turn_to_marker(self,marker)
+        markerID = marker[0]
+        OlavesRovot.move_to_marker(markerID)
+        
+    def Pick_Box(self, marker):
+        #defining how to pick up the actual box
+        pass
+
 
     def _get_hunting_time(self, ):
         self.new_time = robot.get_comp_time():
