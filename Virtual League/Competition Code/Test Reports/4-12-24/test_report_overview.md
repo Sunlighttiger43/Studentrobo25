@@ -18,4 +18,8 @@
 
 # Testing
 ## olaves_robot.get_pos
-- 
+- Was having issues with the code, it was just bugging
+- Decided to completely rewrite the code because the maths that was used for that positioning stuff was just not good
+- Rewrote positioning code in Positioning Testing
+    - Also acts as a place to test positioning logic
+    - Will be especially useful when we get to the real robot and implement rotary encoders.
