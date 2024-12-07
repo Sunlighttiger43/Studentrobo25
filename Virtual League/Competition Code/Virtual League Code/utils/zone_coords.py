@@ -140,5 +140,6 @@ zone_coords = {
     ],
 }
 
-with open('Important Stuff/maps/wall_marker_coords.pkl', 'wb') as f:
-    pickle.dump(zone_coords, f)
+if __name__ == 'main':
+    with open('Important Stuff/maps/wall_marker_coords.pkl', 'wb') as f:
+        pickle.dump(zone_coords, f)

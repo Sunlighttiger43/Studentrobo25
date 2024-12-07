@@ -1,8 +1,10 @@
 import sr.robot3 as sr
 from math import pi, sin, cos, atan2, asin, tan
 from typing import List, Tuple, Optional
+from utils.zone_coords import zone_coords
 from pid import PIDController
 import numpy as np
+from scipy.optimize import least_squares
 from time import time
 import pickle
 import logging
@@ -356,8 +358,8 @@ class OlavesRobot(sr.Robot):
             mx, my, _ = zone_coords[self.zone][m.id]
 
             # Predicted positions
-            pred_mx = rx + d * math.cos(rtheta + alpha)
-            pred_my = ry + d * math.sin(rtheta + alpha)
+            pred_mx = rx + d * cos(rtheta + alpha)
+            pred_my = ry + d * sin(rtheta + alpha)
 
             # Add residuals (difference)
             residuals.append(pred_mx - mx)

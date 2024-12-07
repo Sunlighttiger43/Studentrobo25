@@ -32,10 +32,10 @@ class Hunting(State):
 
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
-        self.time = robot.get_comp_time():
+        self.time = robot.get_comp_time()
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def seeing(self):
-        markers = robot.camera.see()
+        markers = self.r.camera.see()
         OurMarkers = []
         for marker in markers:
             if marker.id >= 100 and marker.id<= 119:
@@ -53,7 +53,7 @@ class Hunting(State):
         #Navigation to the marker given that we know which box to target
         OlavesRobot._turn_to_marker(self,marker)
         markerID = marker[0]
-        OlavesRovot.move_to_marker(markerID)
+        self.r.move_to_marker(markerID)
         
     def Pick_Box(self, marker):
         #defining how to pick up the actual box
@@ -61,7 +61,7 @@ class Hunting(State):
 
 
     def _get_hunting_time(self, ):
-        self.new_time = robot.get_comp_time():
+        self.new_time = self.r.get_comp_time()
         return self.new_time - self.time
         # finds the difference in time since state has occured and present time
 
