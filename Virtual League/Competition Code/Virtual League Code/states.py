@@ -56,7 +56,11 @@ class Hunting(State):
         self.r.move_to_marker(markerID)
         
     def Pick_Box(self, marker):
-        #defining how to pick up the actual box
+        #my_power_board.outputs[OUT_H0].is_enabled = True - TEST IN WEBOTS
+
+        markers = self.r.camera.see()
+
+        
         pass
 
 
