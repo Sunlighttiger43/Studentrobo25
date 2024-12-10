@@ -59,6 +59,7 @@ class Hunting(State):
         #my_power_board.outputs[OUT_H0].is_enabled = True - TEST IN WEBOTS
 
         markers = self.r.camera.see()
+        #Maybe return to where it started from after code is implemeted so that the (basic) shortest distance can work
 
         
         pass
