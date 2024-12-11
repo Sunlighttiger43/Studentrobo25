@@ -60,10 +60,11 @@ class Hunting(State):
 
         markers = self.r.camera.see()
         #Maybe return to where it started from after code is implemeted so that the (basic) shortest distance can work
-
-        
         pass
 
+
+    def return_to_origin(self):
+        OlavesRobot.move_through_path([0, 0])
 
     def _get_hunting_time(self, ):
         self.new_time = self.r.get_comp_time()
