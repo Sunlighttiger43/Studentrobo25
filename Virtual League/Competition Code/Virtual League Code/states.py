@@ -65,6 +65,11 @@ class Hunting(State):
 
     def return_to_origin(self):
         OlavesRobot.move_through_path([0, 0])
+        #To rotate the robot to face back to the middle to be able to see (hopefully!!!)
+        
+        #robot.motor_boards["srABC1"].motors[0].power = 1
+        #robot.sleep(1)
+        #robot.motor_boards["srABC1"].motors[0].power = 0
 
     def _get_hunting_time(self, ):
         self.new_time = self.r.get_comp_time()
