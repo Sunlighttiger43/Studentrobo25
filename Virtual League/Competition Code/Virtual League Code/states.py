@@ -22,13 +22,13 @@ class StateMachine:
             state = state.run()
         print("Ran All")
     def main_loop(self) :
-        hunting_intensity = int(self.get_comp_time()/10) 
-        #hunting intensity is found by dividing the time taken in the round 
+        intensity = int(self.get_comp_time()/10) 
+        #intensity is found by dividing the time taken in the round 
         # the intensity for now will only be determined by the time elapsed however soon factors like amount of boxes will afect it too
         # for now if 100 seconds have elapsed the bot will turn to defensing knoking state
-        if hunting_intensity < 10 :
+        if intensity < 10 :
             Hunting() 
-        elif hunting_intensity < 15 :
+        elif intensity < 15 :
             Knocking()
         else :
             Unused()
