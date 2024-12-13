@@ -97,9 +97,7 @@ class Knocking(State):
 class Unused(State):
     #testing purposes only
     def run(self):
-        while True:
-            self.r.sleep(2)
-            print(self.r.get_pos())
+        pass
 
 
 def main() -> None:
