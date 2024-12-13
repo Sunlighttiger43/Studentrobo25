@@ -1,0 +1,2 @@
+Pragathi and Dev:
+    We added a hunting_intensity factor which decreases over time which we used as a factor to decide which state will robot will be in. We also removed the interrupt condition as it seemed unecessary.
