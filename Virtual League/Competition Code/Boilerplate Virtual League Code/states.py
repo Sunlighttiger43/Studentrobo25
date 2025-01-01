@@ -181,6 +181,8 @@ class Knocking(State):
         super().__init__(robot)
         self.knocking_start_time = robot.get_comp_time()
 
+    # TODO: Actually implementing the knocking state based off of the pseudocode below
+
 
 def main() -> None:
     """
