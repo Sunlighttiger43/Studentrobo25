@@ -1,78 +1,103 @@
 #robot states
 
+from typing import Optional, List, Tuple
 from abc import ABC, abstractmethod
 import numpy as np
 from olaves_robot import OlavesRobot
 from math import pi, sin, cos, floor, atan, tan
 my_power_board=OlavesRobot.power_board
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class State(ABC):
     def __init__(self, robot: OlavesRobot):
         self.r = robot
-
 
 class StateMachine:
     def __init__(self, initialState: State):
         self.initialState = initialState
 
-    def run(self):
-        '''IMPORTANT: This function must be called to start running the first state'''
-        state = self.initialState
-        while state != None:
-            print("Running:", type(state).__name__)
+    def run(self) -> None:
+        """
+        Starts the state machine execution loop.
+
+        IMPORTANT: This function must be called to start running the first state.
+        """
+        state = self.initial_state
+        while state is not None:
+            logger.info(f"Running state: {type(state).__name__}")
             state = state.run()
-        print("Ran All")
+        logger.info("State machine execution completed.")
 
 
 class MainLoop(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
-        self.time = robot.get_comp_time()
 
-    def calculate_intensity(self):
-        '''Calculates the current intensity based on time elapsed and number of pallets
-        
-        This function should not be called outside of main_loop() other than for testing purposes
-        
-        Parameters:
-            None
+    def _calculate_intensity(self) -> int:
+        """
+        Calculates the current intensity based on time elapsed and number of pallets.
+
         Returns:
-            float
-        '''
-        intensity = int(self.get_comp_time()/10)
+            int: The calculated intensity value.
+
+        Notes:
+            - Intensity increases over time and with the number of pallets.
+            - This function can be extended to include more factors influencing intensity.
+        """
+        elapsed_time = self.robot.get_comp_time()
+        number_of_pallets = self._get_number_of_pallets()
+        intensity = int(elapsed_time / 10) # EXAMPLE INTENSITY CALCULATION
         # TODO: Factor in number of pallets into the calculation
+        logger.debug(f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})")
         return intensity
     
-    def get_number_of_pallets(self):
-        '''Gets the number of pallets [insert condition]
-        
-        This function should not be called outside calculate_intensity() other than for testing purposes
-        Parameters:
-            None
-        Returns:
-            int'''
-        pass
-        # TODO: Iimplement this function to return a meaningful number to be used in the intensity calculations
-        # Figure out what exactly this function should be returning
-    
-    def main_loop(self):
-        '''IMPORTANT: Calculates intensity and decides which state to call based on the intensity
+    def _get_number_of_pallets(self) -> int:
+        """
+        Retrieves the current number of our pallets on highrises
 
-        Parameters:
-            None
         Returns:
-            None 
-        '''
+            int: The number of pallets detected.
+
+        Notes:
+            - This function should be implemented to accurately count the number of pallets.
+            - It can utilise sensors or camera inputs to determine pallet count.
+        """
+
+        # TODO: Implement this function to return a meaningful number to be used in intensity calculations
+        # Example Implementation:
+        detected_pallets = self.robot.detect_pallets() # WOULD BE IMPLEMENTED IN OLAVESROBOT CLASS
+        pallet_count = len(detected_pallets)
+        logger.debug(f"Number of pallets detected: {pallet_count}")
+        return pallet_count
+    
+    def run(self) -> Optional[State]:
+        """
+        Executes the main loop logic to calculate intensity and determine the next state.
+
+        Returns:
+            Optional[State]: The next state based on intensity, or None to terminate.
+        """
+
         intensity = self.calculate_intensity()
-        if intensity < 10 :
-            Hunting() 
-        elif intensity < 15 :
-            Knocking()
-        else:
-            pass
+        logger.info(f"Current Intensity: {intensity}")
+
         # TODO: Modify the decision statements to reflect any changes in the intensity calculation
         # Add any other states if they are needed
 
+        if intensity < 10:
+            logger.info("Transitioning to Hunting state.")
+            return Hunting(self.robot)
+        elif intensity < 15:
+            logger.info("Transitioning to Knocking state.")
+            return Knocking(self.robot)
+        else:
+            logger.info("Intensity threshold reached. Terminating.")
+            return None
 
 class Hunting(State):
     def __init__(self, robot: OlavesRobot):
@@ -80,61 +105,75 @@ class Hunting(State):
         self.hunting_start_time = robot.get_comp_time()
     
     #Idea is to get marker distance as well as ID and make judgments based upon it
-    def get_our_markers(self):
-        '''Gets a list of our zone pallet markers
-        
-        Parameters: 
-            None
+    def get_our_markers(self) -> List[Tuple[int, float]]:
+        """
+        Retrieves a list of own pallet markers.
+
         Returns:
-            List[int, float]
-        '''
-        markers = self.r.camera.see()
+            List[Tuple[int, float]]: A list of tuples containing marker IDs and their distances.
+        """
+        markers = self.robot.camera.see()
         our_markers = []
         for marker in markers:
-            if marker.id >= 100 and marker.id<= 119:
-            # MARKER ID RANGE DEPENDENT ON ROBOT ZONE
-                our_markers.append([marker.id, marker.position.distance])
-        # TODO: Change the implementation to account for the fact that our robot could be in any of the 4 zones
+            # TODO: Change the implementation to account for the fact that our robot could be in any of the 4 zones
+            if 100 <= marker.id <= 119:
+                our_markers.append((marker.id, marker.position.distance))
+        logger.debug(f"Our markers: {our_markers}")
         return our_markers
 
-    def judgement_of_distances(self, our_markers):
-        '''Returns the shortest distance marker from a list of marker id-distance pairs
+    def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
+        """
+        Determines the closest marker from the list of own markers.
 
-        Routinely call this method whenever the robot moves to ensure shortest-distance pallet stays updated
-        
         Parameters:
-            our_markers (List[List[int, float]]): 
-                A list of [id, position] pairs. 
-                Should be generated using the get_our_markers() function.
+            our_markers (List[Tuple[int, float]]): A list of (ID, distance) pairs.
+
         Returns:
-            int
+            int: The ID of the closest marker.
+
         Raises:
             ValueError: If 'our_markers' is empty.
-        '''
-        SortedMarkers = sorted(our_markers.items(), key=lambda x:x[1])
-        return SortedMarkers[0][0]
+        """
+        if not our_markers:
+            logger.error("No own markers detected for distance judgement.")
+            raise ValueError("our_markers list is empty.")
 
-    def return_to_origin(self):
-        '''Moves robot to origin on coordinate system and turns to a default angle
+        sorted_markers = sorted(our_markers, key=lambda x: x[1])
+        closest_marker_id = sorted_markers[0][0]
+        logger.debug(f"Closest marker ID: {closest_marker_id}")
+        return closest_marker_id
 
-        Parameters:
-            None
+    def get_hunting_time(self) -> float:
+        """
+        Calculates the time elapsed since the Hunting state was initiated.
+
         Returns:
-            None 
-        '''
-        self.r.move_through_path([0, 0])
-        # TODO: Turn robot to a default angle (using self.r.turn)
+            float: Elapsed time in seconds.
+        """
+        current_time = self.robot.get_comp_time()
+        hunting_duration = current_time - self.hunting_start_time
+        logger.debug(f"Hunting duration: {hunting_duration} seconds.")
+        return hunting_duration
+    
+    def run(self) -> Optional[State]:
+        """
+        Executes the hunting state to manage the robot's own pallets.
 
-    def get_hunting_time(self):
-        '''Returns the time elapsed since thhis instance of the Hunting state began
-        
-        Parameters:
-            None
         Returns:
-            float
-        '''
-        self.new_time = self.r.get_comp_time()
-        return self.new_time - self.hunting_start_time
+            Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
+        """
+        try:
+            our_markers = self.get_our_markers()
+            closest_marker_id = self.judgement_of_distances(our_markers)
+            logger.info(f"Moving to closest marker ID: {closest_marker_id}")
+            self.robot.move_to_marker(closest_marker_id)
+            # TODO: Add logic to handle how the marker is dealt with once approached
+        except ValueError:
+            logger.warning("No own markers detected. Returning to MainLoop.")
+            # TODO: Add interrupt logic here, if no markers are detected maybe a counter should start, 
+            #       if the hunting state runs some number of times in a row with no markers found, then another state should be 
+            #       run instead
+            return MainLoop(self.robot)
 
 
 class Knocking(State):
@@ -144,11 +183,15 @@ class Knocking(State):
 
 
 def main() -> None:
-    r = OlavesRobot()
-    print("Running")
-    print(r.zone)
+    """
+    Main function to initialise the robot and start the state machine.
 
-    StateMachine(Unused(r)).run()
+    Initialises the OlavesRobot and starts the state machine with the MainLoop state.
+    """
+    robot = OlavesRobot()
+    logger.info("Robot initialised and starting state machine.")
+    state_machine = StateMachine(MainLoop(robot))
+    state_machine.run()
 
 '''SKELETON CODE (blueprint) FOR KNOCKING STATE
 
