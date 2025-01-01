@@ -16,88 +16,131 @@ class StateMachine:
         self.initialState = initialState
 
     def run(self):
+        '''IMPORTANT: This function must be called to start running the first state'''
         state = self.initialState
         while state != None:
             print("Running:", type(state).__name__)
             state = state.run()
         print("Ran All")
-    def main_loop(self) :
-        intensity = int(self.get_comp_time()/10) 
-        #intensity is found by dividing the time taken in the round 
-        # the intensity for now will only be determined by the time elapsed however soon factors like amount of boxes will afect it too
-        # for now if 100 seconds have elapsed the bot will turn to defensing knoking state
+
+
+class MainLoop(State):
+    def __init__(self, robot: OlavesRobot):
+        super().__init__(robot)
+        self.time = robot.get_comp_time()
+
+    def calculate_intensity(self):
+        '''Calculates the current intensity based on time elapsed and number of pallets
+        
+        This function should not be called outside of main_loop() other than for testing purposes
+        
+        Parameters:
+            None
+        Returns:
+            float
+        '''
+        intensity = int(self.get_comp_time()/10)
+        # TODO: Factor in number of pallets into the calculation
+        return intensity
+    
+    def get_number_of_pallets(self):
+        '''Gets the number of pallets [insert condition]
+        
+        This function should not be called outside calculate_intensity() other than for testing purposes
+        Parameters:
+            None
+        Returns:
+            int'''
+        pass
+        # TODO: Iimplement this function to return a meaningful number to be used in the intensity calculations
+        # Figure out what exactly this function should be returning
+    
+    def main_loop(self):
+        '''IMPORTANT: Calculates intensity and decides which state to call based on the intensity
+
+        Parameters:
+            None
+        Returns:
+            None 
+        '''
+        intensity = self.calculate_intensity()
         if intensity < 10 :
             Hunting() 
         elif intensity < 15 :
             Knocking()
-        else :
-            Unused()
-
-
-    def Attacking(self):
-        pass
-
-    def Defending(self):
-        pass
+        else:
+            pass
+        # TODO: Modify the decision statements to reflect any changes in the intensity calculation
+        # Add any other states if they are needed
 
 
 class Hunting(State):
-
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
-        self.time = robot.get_comp_time()
+        self.hunting_start_time = robot.get_comp_time()
+    
     #Idea is to get marker distance as well as ID and make judgments based upon it
-    def seeing(self):
+    def get_our_markers(self):
+        '''Gets a list of our zone pallet markers
+        
+        Parameters: 
+            None
+        Returns:
+            List[int, float]
+        '''
         markers = self.r.camera.see()
-        OurMarkers = []
+        our_markers = []
         for marker in markers:
             if marker.id >= 100 and marker.id<= 119:
-                OurMarkers.append([marker.id, marker.position.distance])
-        return OurMarkers
+            # MARKER ID RANGE DEPENDENT ON ROBOT ZONE
+                our_markers.append([marker.id, marker.position.distance])
+        # TODO: Change the implementation to account for the fact that our robot could be in any of the 4 zones
+        return our_markers
 
-    def judgement_of_distances(self, OurMarkers):
-        #Judges which marker is the closest
-        SortedMarkers = sorted(OurMarkers.items(), key=lambda x:x[1])
-        return SortedMarkers[0][0]
-    #We need to routinely update the shortest list because it'll change when you move to each marker
+    def judgement_of_distances(self, our_markers):
+        '''Returns the shortest distance marker from a list of marker id-distance pairs
 
-    #Input is a list that contains marker id and marker distance - and this comes from the sorted markers
-    def go_to_marker(self,marker):
-        #Navigation to the marker given that we know which box to target
-        OlavesRobot._turn_to_marker(self,marker)
-        markerID = marker[0]
-        self.r.move_to_marker(markerID)
+        Routinely call this method whenever the robot moves to ensure shortest-distance pallet stays updated
         
-    def Pick_Box(self, marker):
-        #my_power_board.outputs[OUT_H0].is_enabled = True - TEST IN WEBOTS
-
-        markers = self.r.camera.see()
-        #Maybe return to where it started from after code is implemeted so that the (basic) shortest distance can work
-        pass
-
+        Parameters:
+            our_markers (List[List[int, float]]): 
+                A list of [id, position] pairs. 
+                Should be generated using the get_our_markers() function.
+        Returns:
+            int
+        Raises:
+            ValueError: If 'our_markers' is empty.
+        '''
+        SortedMarkers = sorted(our_markers.items(), key=lambda x:x[1])
+        return SortedMarkers[0][0]
 
     def return_to_origin(self):
-        OlavesRobot.move_through_path([0, 0])
-        #To rotate the robot to face back to the middle to be able to see (hopefully!!!)
-        
-        #robot.motor_boards["srABC1"].motors[0].power = 1
-        #robot.sleep(1)
-        #robot.motor_boards["srABC1"].motors[0].power = 0
+        '''Moves robot to origin on coordinate system and turns to a default angle
 
-    def _get_hunting_time(self, ):
+        Parameters:
+            None
+        Returns:
+            None 
+        '''
+        self.r.move_through_path([0, 0])
+        # TODO: Turn robot to a default angle (using self.r.turn)
+
+    def get_hunting_time(self):
+        '''Returns the time elapsed since thhis instance of the Hunting state began
+        
+        Parameters:
+            None
+        Returns:
+            float
+        '''
         self.new_time = self.r.get_comp_time()
-        return self.new_time - self.time
-        # finds the difference in time since state has occured and present time
+        return self.new_time - self.hunting_start_time
 
-        
 
 class Knocking(State):
-    pass
-
-class Unused(State):
-    #testing purposes only
-    def run(self):
-        pass
+    def __init__(self, robot: OlavesRobot):
+        super().__init__(robot)
+        self.knocking_start_time = robot.get_comp_time()
 
 
 def main() -> None:
