@@ -2,20 +2,51 @@ import math
 from typing import List, Tuple
 from pid import PIDController
 from sr.robot3 import Robot
-
-import math
+from sympy import Matrix,linsolve,symbols
+x, y = symbols("x, y")
 from heapq import heappush, heappop
 markers = robot.camera.see()
+
+#medium marker
+# 1. rotate 90 degrees either side, to gather large list on input markers
+#2 normal location finder
+
+#slow marker
+#1. rotate 90 degrees each side 
+#2 find all possible intersections
+#3 upper and lower fence to find intersections closest together
+#4 use ranges within the fences and calculate very accurate estimate of location
+
+#fast marker
+#1 no rotations
+#2 use all available markers
+#3 random intersections
+#4 find location estimate
 def location_finder(markers):
 
     marker_info = []
+   
+
 
     for marker in markers:
-       marker_info.append([marker.position.distance, marker.position.horizontal_angle])
+       marker_info.append([marker.position.distance, marker.position.horizontal_angle, marker.id])
+         # adds all data about the markers to a list/tuple
+     
 
-    # adds all data about the markers to a list/tuple
+   
     # for each marker find the equation of the lines from the marker to the robot
+equation_list = []
+
+def equationmaker(a, b, angle):
+    m = a*tan(math.degrees(angle))
+    c = b-(m*a)
+    Eqn = [-1*m*x + y - c]
+    equation_list.append(Eqn)
+    
+        
+    
     # find the coordinates of the intersections of the lines
+
     # average the coordiantes of the intersections
     # output the coordinates as a tuple
 Wallmarker0 = (-2155.5,2875)
