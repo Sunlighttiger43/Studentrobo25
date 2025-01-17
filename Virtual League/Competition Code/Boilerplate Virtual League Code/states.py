@@ -1,16 +1,10 @@
-#robot states
+# states
 
 from typing import Optional, List, Tuple
 from abc import ABC, abstractmethod
-import numpy as np
 from olaves_robot import OlavesRobot
-from math import pi, sin, cos, floor, atan, tan
-my_power_board=OlavesRobot.power_board
-
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class State(ABC):
@@ -18,8 +12,8 @@ class State(ABC):
         self.r = robot
 
 class StateMachine:
-    def __init__(self, initialState: State):
-        self.initialState = initialState
+    def __init__(self, initial_state: State):
+        self.initial_state = initial_state
 
     def run(self) -> None:
         """
@@ -49,7 +43,7 @@ class MainLoop(State):
             - Intensity increases over time and with the number of pallets.
             - This function can be extended to include more factors influencing intensity.
         """
-        elapsed_time = self.robot.get_comp_time()
+        elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
         intensity = int(elapsed_time / 10) # EXAMPLE INTENSITY CALCULATION
         # TODO: Factor in number of pallets into the calculation
@@ -70,7 +64,8 @@ class MainLoop(State):
 
         # TODO: Implement this function to return a meaningful number to be used in intensity calculations
         # Example Implementation:
-        detected_pallets = self.robot.detect_pallets() # WOULD BE IMPLEMENTED IN OLAVESROBOT CLASS
+        # detected_pallets = self.r.detect_pallets() # TODO: Implement detect_pallets() in olaves_robot
+        detected_pallets = "PLACEHOLDER"
         pallet_count = len(detected_pallets)
         logger.debug(f"Number of pallets detected: {pallet_count}")
         return pallet_count
@@ -83,7 +78,7 @@ class MainLoop(State):
             Optional[State]: The next state based on intensity, or None to terminate.
         """
 
-        intensity = self.calculate_intensity()
+        intensity = self._calculate_intensity()
         logger.info(f"Current Intensity: {intensity}")
 
         # TODO: Modify the decision statements to reflect any changes in the intensity calculation
@@ -91,10 +86,10 @@ class MainLoop(State):
 
         if intensity < 10:
             logger.info("Transitioning to Hunting state.")
-            return Hunting(self.robot)
+            return Hunting(self.r)
         elif intensity < 15:
             logger.info("Transitioning to Knocking state.")
-            return Knocking(self.robot)
+            return Knocking(self.r)
         else:
             logger.info("Intensity threshold reached. Terminating.")
             return None
@@ -102,7 +97,7 @@ class MainLoop(State):
 class Hunting(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
-        self.hunting_start_time = robot.get_comp_time()
+        self.hunting_start_time = self.r.get_comp_time()
     
     #Idea is to get marker distance as well as ID and make judgments based upon it
     def get_our_markers(self) -> List[Tuple[int, float]]:
@@ -112,7 +107,7 @@ class Hunting(State):
         Returns:
             List[Tuple[int, float]]: A list of tuples containing marker IDs and their distances.
         """
-        markers = self.robot.camera.see()
+        markers = self.r.camera.see()
         our_markers = []
         for marker in markers:
             # TODO: Change the implementation to account for the fact that our robot could be in any of the 4 zones

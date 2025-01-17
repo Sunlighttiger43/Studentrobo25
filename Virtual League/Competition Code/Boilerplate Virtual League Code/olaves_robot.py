@@ -1,20 +1,19 @@
-import sr.robot3 as sr
-from math import pi, sin, cos, atan2, asin, tan
-from typing import List, Tuple, Optional
-from pid import PIDController
-import numpy as np
-from scipy.optimize import least_squares
-from time import time
-import pickle
-import logging
-import heapq
+# olaves_robot.py
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+import sr.robot3 as sr
+from math import pi
+from typing import List, Tuple, Optional, Union
+from pid import PIDController
+from time import time
+import numpy as np
+import logging
+
 logger = logging.getLogger(__name__)
+
 
 class OlavesRobot(sr.Robot):
     def __init__(self):
+        super().__init__()
         logger.info("Initialising OlavesRobot")
         self.init_time: float = time()
 
@@ -107,7 +106,7 @@ class OlavesRobot(sr.Robot):
             "get_marker_orientation is not needed for the virtual league."
         )
 
-    def _get_marker_by_id(self, marker_id: int) -> sr.Marker:
+    def _get_marker_by_id(self, marker_id: int) -> sr.marker:
         """
         Retrieves a marker by its ID.
 
@@ -204,7 +203,9 @@ class OlavesRobot(sr.Robot):
         # TODO: Implement movement logic using PID controllers
         raise NotImplementedError("move_to_marker method needs to be implemented.")
 
-    def get_pos(self, test_markers: Optional[List[sr.Marker]] = None) -> Optional[Tuple[float, float, float]]:
+    def get_pos(
+        self, test_markers: Optional[List[sr.marker]] = None
+    ) -> Optional[Tuple[float, float, float]]:
         """
         Estimates the robot's position and orientation.
 
@@ -259,7 +260,12 @@ class OlavesRobot(sr.Robot):
         # TODO: Implement movement to position using PID controllers
         raise NotImplementedError("move_pos method needs to be implemented.")
 
-    def power(self, wheels: Tuple[float, float], duration: float, off: bool = True,) -> None:
+    def power(
+        self,
+        wheels: Tuple[float, float],
+        duration: float,
+        off: bool = True,
+    ) -> None:
         """
         Controls the motors by setting their power levels.
 
@@ -312,7 +318,9 @@ class OlavesRobot(sr.Robot):
         logger.debug(f"Clamping value {value} to {clamped_value}.")
         return clamped_value
 
-    def _wonky_wheels_correction(self, wheels: Tuple[float, float]) -> Tuple[float, float]:
+    def _wonky_wheels_correction(
+        self, wheels: Tuple[float, float]
+    ) -> Tuple[float, float]:
         """
         Applies correction to the wheel power values.
 
@@ -334,7 +342,7 @@ class OlavesRobot(sr.Robot):
         )
         return wheels  # Assuming no correction needed in simulation
 
-    def get_marker_type(self, marker: sr.Marker | int) -> Optional[str]:
+    def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """
         Determines the type of a marker based on its ID.
 
