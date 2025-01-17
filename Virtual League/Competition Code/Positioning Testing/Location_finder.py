@@ -1,8 +1,9 @@
 from typing import List, Tuple
 from pid import PIDController
 from sr.robot3 import Robot
-
 import math
+from random import random 
+
 from sympy import Matrix,linsolve,symbols
 x, y = symbols("x, y")
 from heapq import heappush, heappop
@@ -10,7 +11,7 @@ markers = robot.camera.see()
 
 
 
-def equationmaker(distance,xcoord , ycoord, angle):
+def equationmaker(distance, xcoord , ycoord, angle):
     m = distance*tan(math.degrees(angle))
     c = ycoord-(m*xcoord)
     Eqn = [-1*m*x + y - c]
@@ -34,6 +35,12 @@ def location_finder(markers):
     equation_list = []
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
+    for i in range(math.floor(len(equation_list)/2)):
+        equationsolver(equation_list[i], equation_list[random.choice(equation_list))
+        # variable holding coords, will add the new ones and divide by 2 
+    
+
+    
     
     
 
