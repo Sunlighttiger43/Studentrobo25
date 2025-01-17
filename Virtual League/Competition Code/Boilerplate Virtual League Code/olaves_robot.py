@@ -7,6 +7,7 @@ from pid import PIDController
 from time import time
 import numpy as np
 import logging
+import pid
 
 logger = logging.getLogger(__name__)
 
