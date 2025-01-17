@@ -1,4 +1,5 @@
 # olaves_robot.py
+import math
 
 import sr.robot3 as sr
 from math import pi
@@ -245,7 +246,7 @@ class OlavesRobot(sr.Robot):
             "set_robot_orientation method needs to be implemented."
         )
 
-    def move_pos(self, target_position: Tuple[float, float]) -> None:
+    def move_pos(self, target_position: Tuple[float, float], current_position: Tuple[float, float]) -> None:
         """
         Moves the robot to a specific (x, y) position using PID controllers for angle and distance.
 
@@ -259,6 +260,7 @@ class OlavesRobot(sr.Robot):
         """
         logger.info(f"Moving to position {target_position}.")
         # TODO: Implement movement to position using PID controllers
+        distance_from_marker = math.sqrt((target_position[0] - current_position[0])**2+ (target_position[1]**2 - current_position[1]))
         raise NotImplementedError("move_pos method needs to be implemented.")
 
     def power(
