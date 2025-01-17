@@ -8,7 +8,48 @@ x, y = symbols("x, y")
 from heapq import heappush, heappop
 markers = robot.camera.see()
 
-#medium marker
+
+
+def equationmaker(distance,xcoord , ycoord, angle):
+    m = distance*tan(math.degrees(angle))
+    c = ycoord-(m*xcoord)
+    Eqn = [-1*m*x + y - c]
+    equation_list.append(Eqn)
+
+def equationsolver(eqa, eqb): # fu+nction to find the common coordinate of 2 lines
+    for i in range(floor(len(l/2)):
+    linsolve((eqa, eqb), x, y)    
+        
+
+def location_finder(markers):
+
+    marker_info = []
+
+    for marker in markers:
+            marker_info.append([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
+
+        
+
+    # for each marker find the equation of the lines from the marker to the robot
+    equation_list = []
+    for i in marker_info:
+        equationmaker(i[0],i[3],i[4],i[1])
+    
+    
+
+    # find the coordinates of the intersections of the lines
+
+    # average the coordiantes of the intersections
+    # output the coordinates as a tuple
+
+
+    # adds all data about the markers to a list/tuple
+    # for each marker find the equation of the lines from the marker to the robot
+    # find the coordinates of the intersections of the lines
+    # average the coordiantes of the intersections
+    # output the coordinates as a tuple
+
+    #medium marker
 # 1. rotate 90 degrees either side, to gather large list on input markers
 #2 normal location finder
 
@@ -23,42 +64,8 @@ markers = robot.camera.see()
 #2 use all available markers
 #3 random intersections
 #4 find location estimate
-def location_finder(markers):
 
-    marker_info = []
-
-
-
-    for marker in markers:
-       marker_info.append([marker.position.distance, marker.position.horizontal_angle])
-       marker_info.append([marker.position.distance, marker.position.horizontal_angle, marker.id])
-         # adds all data about the markers to a list/tuple
-
-
-    # adds all data about the markers to a list/tuple
-
-    # for each marker find the equation of the lines from the marker to the robot
-equation_list = []
-
-def equationmaker(a, b, angle):
-    m = a*tan(math.degrees(angle))
-    c = b-(m*a)
-    Eqn = [-1*m*x + y - c]
-    equation_list.append(Eqn)
-
-
-
-    # find the coordinates of the intersections of the lines
-
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
-
-
-    # adds all data about the markers to a list/tuple
-    # for each marker find the equation of the lines from the marker to the robot
-    # find the coordinates of the intersections of the lines
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
+#change to dictionary
 Wallmarker0 = (-2155.5,2875)
 Wallmarker1 = (-1437.5,2875)
 Wallmarker2 = (-719.5,2875)
