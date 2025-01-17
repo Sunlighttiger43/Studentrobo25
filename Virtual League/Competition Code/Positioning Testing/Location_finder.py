@@ -26,7 +26,7 @@ def location_finder(markers):
     marker_info = []
 
     for marker in markers:
-            marker_info.append([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
+            marker_info.extend([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
 
         
 
