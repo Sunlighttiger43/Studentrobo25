@@ -168,6 +168,7 @@ class OlavesRobot(sr.Robot):
         )
 
     def get_marker_pos(self, marker_id: int) -> Tuple[float, float]:
+        #NEEDS TO BE TESTED - IMPLEMENTED BY AARIT
         """
         Calculates the absolute position of a marker based on its relative position to the robot.
 
@@ -187,7 +188,26 @@ class OlavesRobot(sr.Robot):
         # x = ...  # Calculate x-coordinate
         # y = ...  # Calculate y-coordinate
         # return (x, y)
-        raise NotImplementedError("get_marker_pos method needs to be implemented.")
+        try:
+            markerDistance = self._get_marker_by_id(marker_id)
+        except ValueError:
+            raise ValueError(f"Marker with ID {marker_id} not found.")
+        Robot_current_pos = self.get_pos() #Here I am assuming that the angle is a bearing in radians
+        robot_x, robot_y = Robot_current_pos[0], Robot_current_pos[1],
+        markers = self.camera.see()
+        for marker in markers:
+            if marker_id == marker.id:
+                marker_orientation = marker.orientation.yaw
+        #Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
+        x_vector = math.sqrt(2*markerDistance**2 - (markerDistance**2)*math.cos(marker_orientation)) /2
+        y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
+
+        x_coord = x_vector + robot_x
+        y_coord = y_vector + robot_y
+
+        return (x_coord, y_coord)
+
+
 
     def move_to_marker(self, marker_id: int) -> None:
         """
@@ -261,6 +281,7 @@ class OlavesRobot(sr.Robot):
         logger.info(f"Moving to position {target_position}.")
         # TODO: Implement movement to position using PID controllers
         distance_from_marker = math.sqrt((target_position[0] - current_position[0])**2+ (target_position[1]**2 - current_position[1]))
+        _
         raise NotImplementedError("move_pos method needs to be implemented.")
 
     def power(
