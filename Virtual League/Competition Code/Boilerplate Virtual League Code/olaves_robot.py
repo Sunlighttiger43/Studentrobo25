@@ -193,7 +193,7 @@ class OlavesRobot(sr.Robot):
         except ValueError:
             raise ValueError(f"Marker with ID {marker_id} not found.")
         Robot_current_pos = self.get_pos() #Here I am assuming that the angle is a bearing in radians
-        robot_x, robot_y = Robot_current_pos[0], Robot_current_pos[1],
+        robot_x, robot_y, robot_theta = Robot_current_pos[0], Robot_current_pos[1], Robot_current_pos[2]
         markers = self.camera.see()
         for marker in markers:
             if marker_id == marker.id:
@@ -201,10 +201,13 @@ class OlavesRobot(sr.Robot):
         #Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
         x_vector = math.sqrt(2*markerDistance**2 - (markerDistance**2)*math.cos(marker_orientation)) /2
         y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
-
-        x_coord = x_vector + robot_x
-        y_coord = y_vector + robot_y
-
+        #Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot
+        if (robot_theta > 270 and robot_theta < 360) or (robot_theta > 0 and robot_theta < 90):
+            x_coord = x_vector + robot_x
+            y_coord = y_vector + robot_y
+        else:
+            x_coord = robot_x - x_vector
+            y_coord = robot_y - y_vector
         return (x_coord, y_coord)
 
 
