@@ -426,3 +426,23 @@ class OlavesRobot(sr.Robot):
             case _:
                 logger.warning(f"Unknown marker ID: {marker_id}")
                 return None
+
+
+    def detect_pallets(self):
+        '''
+        Determines the amount of high rise pallets the robot can see for our team
+        We do this by checking if the pitch angle and if it is tilted up (ie less than 0 radians)
+        Parameters:
+            None
+        Output:
+            list output [numberofhighrises, ourfloormarkers]
+        '''
+
+        logger.debug(f"Determining the number of high rises from our team")
+
+        markers = self.camera.see()
+        highrisers = 0
+        for marker in markers:
+            if marker.orientation.pitch < 0 and (self.get_marker_type(marker) == "pallet0" or self.get_marker_type(marker) == "pallet1" or self.get_marker_type(marker) == "pallet2" or self.get_marker_type(marker) == "pallet3"):
+                highrisers = highrisers + 1
+        return [highrisers, 4-highrisers]

@@ -65,7 +65,7 @@ class MainLoop(State):
         # TODO: Implement this function to return a meaningful number to be used in intensity calculations
         # Example Implementation:
         # detected_pallets = self.r.detect_pallets() # TODO: Implement detect_pallets() in olaves_robot
-        detected_pallets = "PLACEHOLDER"
+        detected_pallets = self.r.detect_pallets()
         pallet_count = len(detected_pallets)
         logger.debug(f"Number of pallets detected: {pallet_count}")
         return pallet_count
