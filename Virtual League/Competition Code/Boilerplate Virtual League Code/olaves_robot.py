@@ -93,7 +93,7 @@ class OlavesRobot(sr.Robot):
         This method is not needed for the virtual league and is intentionally left unimplemented.
 
         Assumptions:
-            - To be based on new positioning system proposed by Kushal and Francis
+            - To be based on new positioning system proposed by Shehryer and Francis
 
         Parameters:
             marker_id (int): The ID of the marker.
@@ -225,8 +225,17 @@ class OlavesRobot(sr.Robot):
             NotImplementedError: Indicates that the method's implementation is pending.
         """
         logger.info(f"Moving to marker ID {marker_id}.")
-        # TODO: Implement movement logic using PID controllers
-        raise NotImplementedError("move_to_marker method needs to be implemented.")
+        # TODO: Implement movement logic using PID controllers - initially I (aarit) will keep it simple and not utilise PID controls
+        #Given Robot can see marker
+        marker = next((m for m in self.camera.see() if m.id == marker_id), None)
+        if marker is not None:
+            x, y = self.get_marker_pos(marker_id)
+            distance = math.sqrt(x**2 + y**2)
+            robot_current_pos = self.get_pos()
+            self.move_pos(self.get_marker_pos(marker_id), (robot_current_pos[0], robot_current_pos[1]))
+            logger.debug(f"Movement Complete")
+        else:
+            raise ValueError(f"Cannot see marker")
 
     def get_pos(
         self, test_markers: Optional[List[sr.marker]] = None
