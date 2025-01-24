@@ -38,13 +38,31 @@ def location_finder(markers):
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
     for i in range(math.floor(len(equation_list)/2)):
-        new_total=equationsolver(equation_list[i], equation_list[random.choice(equation_list)])
-        new_total=new_total/(math.floor(len(equation_list)/2))
+       eq_output=equationsolver(equation_list[i], equation_list[random.choice(equation_list)])
+       xcoord_new += eq_output[0]
+       ycoord_new += eq_output[1]
+    xcoord_new=xcoord_new/(math.floor(len(equation_list)/2))
+    ycoord_new=ycoord_new/(math.floor(len(equation_list)/2))
+    return (xcoord_new, ycoord_new )
+    
+    
+    
+def angle_finder(xcoord, ycoord):
+    angle = math.atan(ycoord/xcoord)
+    if angle < 0:
+        if xcoord < 0:
+            angle = abs(angle) + 270
+        elif xcoord >= 0:
+            angle = abs(angle) + 90
+    elif angle >= 0:
+        if xcoord < 0:
+            angle = abs(angle) + 180
+        else: 
+            angle = 90-abs(angle)
+    
+    return angle
+   
 
-    return new_total
-    
-    
-    
 
     
 Marker_Dictionary = {
