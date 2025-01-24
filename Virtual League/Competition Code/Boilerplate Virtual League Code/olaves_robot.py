@@ -443,7 +443,7 @@ class OlavesRobot(sr.Robot):
         Parameters:
             None
         Output:
-            list output [numberofhighrises, ourfloormarkers]
+            list output [numberofhighrises, onfloormarkers]
         '''
 
         logger.debug(f"Determining the number of high rises from our team")
@@ -453,4 +453,22 @@ class OlavesRobot(sr.Robot):
         for marker in markers:
             if marker.orientation.pitch < 0 and (self.get_marker_type(marker) == "pallet0" or self.get_marker_type(marker) == "pallet1" or self.get_marker_type(marker) == "pallet2" or self.get_marker_type(marker) == "pallet3"):
                 highrisers = highrisers + 1
-        return [highrisers, 4-highrisers]
+        return [highrisers, 6-highrisers]
+
+
+    def pick_hold_box(self):
+        '''
+        has to pick up and hold the box (dropping is defined in a different method)
+        Parameters:
+            None
+        Output:
+            Debug of box being picked up
+        '''
+        markers = self.camera.see()
+        for marker in markers:
+            if marker == marker.id:
+                marker_orientation = marker.orientation.yaw
+
+        distance_m = self.arduino.ultrasound_measure(2, 3) * (10**-3)
+        if distance_m == 0:
+            self.motor_boards["OUT_H0"] = 1
