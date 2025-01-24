@@ -9,7 +9,7 @@ x, y = symbols("x, y")
 from heapq import heappush, heappop
 markers = robot.camera.see()
 
-
+equation_list = []
 
 def equationmaker(distance, xcoord , ycoord, angle):
     m = distance*tan(math.degrees(angle))
@@ -18,8 +18,9 @@ def equationmaker(distance, xcoord , ycoord, angle):
     equation_list.append(Eqn)
 
 def equationsolver(eqa, eqb): # fu+nction to find the common coordinate of 2 lines
-    for i in range(floor(len(l/2)):
-    linsolve((eqa, eqb), x, y)    
+    x = len(equation_list)
+    for i in range(floor(len(x/2))):
+        linsolve((eqa, eqb), x, y)    
         
 
 def location_finder(markers):
@@ -27,17 +28,17 @@ def location_finder(markers):
     marker_info = []
 
     for marker in markers:
-            marker_info.extend([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
+        marker_info.extend ([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
 
         
 
     # for each marker find the equation of the lines from the marker to the robot
-    equation_list = []
+    
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
     for i in range(math.floor(len(equation_list)/2)):
         new_total=0
-        new_total=equationsolver(equation_list[i], equation_list[random.choice(equation_list))
+        new_total=equationsolver(equation_list[i], equation_list[random.choice(equation_list)])
         new_total=new_total/(math.floor(len(equation_list)/2))
 
     return new_total
@@ -45,35 +46,7 @@ def location_finder(markers):
     
     
 
-    # find the coordinates of the intersections of the lines
-
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
-
-
-    # adds all data about the markers to a list/tuple
-    # for each marker find the equation of the lines from the marker to the robot
-    # find the coordinates of the intersections of the lines
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
-
-    #medium marker
-# 1. rotate 90 degrees either side, to gather large list on input markers
-#2 normal location finder
-
-#slow marker
-#1. rotate 90 degrees each side 
-#2 find all possible intersections
-#3 upper and lower fence to find intersections closest together
-#4 use ranges within the fences and calculate very accurate estimate of location
-
-#fast marker
-#1 no rotations
-#2 use all available markers
-#3 random intersections
-#4 find location estimate
-
-#change to dictionary
+    
 Marker_Dictionary = {
 "Wallmarker0": (-2155.5, 2875),
 "Wallmarker1": (-1437.5, 2875),
@@ -105,5 +78,3 @@ Marker_Dictionary = {
 "Wallmarker27": (-2875, 2155.5)
 }
 
-
-#why does vsc tell me that there is a colon missing???
