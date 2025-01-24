@@ -28,16 +28,16 @@ def location_finder(markers):
     marker_info = []
 
     for marker in markers:
-        marker_info.extend ([marker.position.distance, marker.position.horizontal_angle, marker.id, x coord of key(marker.id), y coord of key(marker.id)])
+        marker_info.extend ([marker.position.distance, marker.position.horizontal_angle, marker.id, , y coord of key(marker.id)])
 
         
 
     # for each marker find the equation of the lines from the marker to the robot
-    
+    xcoord_new = 0
+    ycoord_new = 0
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
     for i in range(math.floor(len(equation_list)/2)):
-        new_total=0
         new_total=equationsolver(equation_list[i], equation_list[random.choice(equation_list)])
         new_total=new_total/(math.floor(len(equation_list)/2))
 
@@ -48,33 +48,35 @@ def location_finder(markers):
 
     
 Marker_Dictionary = {
-"Wallmarker0": (-2155.5, 2875),
-"Wallmarker1": (-1437.5, 2875),
-"Wallmarker2": (-719.5, 2875),
-"Wallmarker3": (0, 2875),
-"Wallmarker4": (719.5, 2875),
-"Wallmarker5": (1437.5, 2875),
-"Wallmarker6": (2155.5, 2875),
-"Wallmarker7": (2875, 2155.5),
-"Wallmarker8": (2875, 1437.5),
-"Wallmarker9": (2875, 719.5),
-"Wallmarker10": (2875, 0),
-"Wallmarker11": (2875, -719.5),
-"Wallmarker12": (2875, -1437.5),
-"Wallmarker13": (2875, -2155.5),
-"Wallmarker14": (2155.5, -2875),
-"Wallmarker15": (1437.5, -2875),
-"Wallmarker16": (719.5, -2875),
-"Wallmarker17": (0, -2875),
-"Wallmarker18": (-719.5, -2875),
-"Wallmarker19": (-1437.5, -2875),
-"Wallmarker20": (-2155.5, -2875),
-"Wallmarker21": (-2875, -2155.5),
-"Wallmarker22": (-2875, -1437.5),
-"Wallmarker23": (-2875, -719.5),
-"Wallmarker24": (-2875, 0),
-"Wallmarker25": (-2875, 719.5),
-"Wallmarker26": (-2875, 1437.5),
-"Wallmarker27": (-2875, 2155.5)
+"0": (-2155.5, 2875),
+"1": (-1437.5, 2875),
+"2": (-719.5, 2875),
+"3": (0, 2875),
+"4": (719.5, 2875),
+"5": (1437.5, 2875),
+"6": (2155.5, 2875),
+"7": (2875, 2155.5),
+"8": (2875, 1437.5),
+"9": (2875, 719.5),
+"10": (2875, 0),
+"11": (2875, -719.5),
+"12": (2875, -1437.5),
+"13": (2875, -2155.5),
+"14": (2155.5, -2875),
+"15": (1437.5, -2875),
+"16": (719.5, -2875),
+"17": (0, -2875),
+"18": (-719.5, -2875),
+"19": (-1437.5, -2875),
+"20": (-2155.5, -2875),
+"21": (-2875, -2155.5),
+"22": (-2875, -1437.5),
+"23": (-2875, -719.5),
+"24": (-2875, 0),
+"25": (-2875, 719.5),
+"26": (-2875, 1437.5),
+"27": (-2875, 2155.5)
 }
 
+
+#why does vsc tell me that there is a colon missing???
