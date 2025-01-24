@@ -47,6 +47,22 @@ def location_finder(markers):
     
     
     
+def angle_finder(xcoord, ycoord):
+    angle = math.atan(ycoord/xcoord)
+    if angle < 0:
+        if xcoord < 0:
+            angle = abs(angle) + 270
+        elif xcoord >= 0:
+            angle = abs(angle) + 90
+    elif angle >= 0:
+        if xcoord < 0:
+            angle = abs(angle) + 180
+        else: 
+            angle = 90-abs(angle)
+    
+    return angle
+   
+
 
     
 Marker_Dictionary = {
