@@ -201,13 +201,21 @@ class OlavesRobot(sr.Robot):
         #Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
         x_vector = math.sqrt(2*markerDistance**2 - (markerDistance**2)*math.cos(marker_orientation)) /2
         y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
-        #Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot
+        #Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
         if (robot_theta > 270 and robot_theta < 360) or (robot_theta > 0 and robot_theta < 90):
-            x_coord = x_vector + robot_x
-            y_coord = y_vector + robot_y
+            if marker.orientation.yaw > 0:
+                x_coord = robot_x - x_vector
+                y_coord = y_vector + robot_y
+            else:
+                x_coord = x_vector + robot_x
+                y_coord = y_vector + robot_y
         else:
-            x_coord = robot_x - x_vector
-            y_coord = robot_y - y_vector
+            if marker.orientation.yaw > 0:
+                x_coord = robot_x + x_vector
+                y_coord = y_vector - robot_y
+            else:
+                x_coord = x_vector - robot_x
+                y_coord = y_vector - robot_y
         return (x_coord, y_coord)
 
 
