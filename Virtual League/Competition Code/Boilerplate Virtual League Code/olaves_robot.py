@@ -2,7 +2,7 @@
 import math
 
 import sr.robot3 as sr
-from math import pi
+from math import pi, sqrt
 from typing import List, Tuple, Optional, Union
 from pid import PIDController
 from time import time
@@ -18,6 +18,9 @@ class OlavesRobot(sr.Robot):
         super().__init__()
         logger.info("Initialising OlavesRobot")
         self.init_time: float = time()
+        arduino = self.arduinos["Arduino1"]
+        my_servo_board = self.servo_board
+        my_power_board = self.power_board
 
     def get_comp_time(self) -> float:
         """
@@ -464,6 +467,10 @@ class OlavesRobot(sr.Robot):
         Output:
             Debug of box being picked up
         '''
+        #Make sure it is back at its intial starting point
+        self.servo_board.servos["SERVO"].position = -1
+
+
         markers = self.camera.see()
         for marker in markers:
             if marker == marker.id:
@@ -471,4 +478,5 @@ class OlavesRobot(sr.Robot):
 
         distance_m = self.arduino.ultrasound_measure(2, 3) * (10**-3)
         if distance_m == 0:
-            self.motor_boards["OUT_H0"] = 1
+            self.power_board.outputs["OUT_H0"].power_on()
+            self.sleep(3)
