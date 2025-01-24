@@ -36,42 +36,16 @@ def location_finder(markers):
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
     for i in range(math.floor(len(equation_list)/2)):
-        equationsolver(equation_list[i], equation_list[random.choice(equation_list))
-        # variable holding coords, will add the new ones and divide by 2 
+        new_total=0
+        new_total+=equationsolver(equation_list[i], equation_list[random.choice(equation_list))
+        new_total=new_total/(math.floor(len(equation_list)/2))
+
+    return new_total
+    
+    
     
 
     
-    
-    
-
-    # find the coordinates of the intersections of the lines
-
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
-
-
-    # adds all data about the markers to a list/tuple
-    # for each marker find the equation of the lines from the marker to the robot
-    # find the coordinates of the intersections of the lines
-    # average the coordiantes of the intersections
-    # output the coordinates as a tuple
-
-    #medium marker
-# 1. rotate 90 degrees either side, to gather large list on input markers
-#2 normal location finder
-
-#slow marker
-#1. rotate 90 degrees each side 
-#2 find all possible intersections
-#3 upper and lower fence to find intersections closest together
-#4 use ranges within the fences and calculate very accurate estimate of location
-
-#fast marker
-#1 no rotations
-#2 use all available markers
-#3 random intersections
-#4 find location estimate
-
 #change to dictionary
 Wallmarker0 = (-2155.5,2875)
 Wallmarker1 = (-1437.5,2875)
