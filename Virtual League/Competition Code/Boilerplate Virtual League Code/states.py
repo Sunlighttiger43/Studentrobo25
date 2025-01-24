@@ -45,7 +45,21 @@ class MainLoop(State):
         """
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
-        intensity = int(elapsed_time / 10) # EXAMPLE INTENSITY CALCULATION
+        boxes_left = 6 - self._get_number_of_pallets
+        
+        if elapsed_time == 150:
+            intensity = 3
+        elif boxes_left == 2 and elapsed_time >= 135 or boxes_left == 1 and elapsed_time >= 140 or boxes_left == 0:
+            intensity = 2
+        elif boxes_left >= 2 :
+            intensity = 1
+        """
+        we remoddelled the intensity so that it will keep hunting until 2 boxes 
+        it will switch to the knocking state if we have 15 seconds left with 2 boxes or 1 box left with 10 seconds or we have 0 boxes left
+        if the time_elapsed is past the total round time, it will switch to sleep state
+        """            
+
+         # EXAMPLE INTENSITY CALCULATION
         # TODO: Factor in number of pallets into the calculation
         logger.debug(f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})")
         return intensity
@@ -65,7 +79,7 @@ class MainLoop(State):
         # TODO: Implement this function to return a meaningful number to be used in intensity calculations
         # Example Implementation:
         # detected_pallets = self.r.detect_pallets() # TODO: Implement detect_pallets() in olaves_robot
-        detected_pallets = self.r.detect_pallets()
+        detected_pallets = self.r.detect_pallets()[0]
         pallet_count = len(detected_pallets)
         logger.debug(f"Number of pallets detected: {pallet_count}")
         return pallet_count
@@ -84,13 +98,13 @@ class MainLoop(State):
         # TODO: Modify the decision statements to reflect any changes in the intensity calculation
         # Add any other states if they are needed
 
-        if intensity < 10:
+        if intensity == 1:
             logger.info("Transitioning to Hunting state.")
             return Hunting(self.r)
-        elif intensity < 15:
+        elif intensity == 2:
             logger.info("Transitioning to Knocking state.")
             return Knocking(self.r)
-        else:
+        ellif intensity == 3:
             logger.info("Intensity threshold reached. Terminating.")
             return None
 
