@@ -104,7 +104,7 @@ class MainLoop(State):
         elif intensity == 2:
             logger.info("Transitioning to Knocking state.")
             return Knocking(self.r)
-        ellif intensity == 3:
+        elif intensity == 3:
             logger.info("Intensity threshold reached. Terminating.")
             return None
 

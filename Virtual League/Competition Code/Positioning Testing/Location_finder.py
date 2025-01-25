@@ -1,25 +1,26 @@
 from typing import List, Tuple
 from pid import PIDController
 from sr.robot3 import Robot
-import math
+from math import tan, floor, degrees, atan
 from random import random 
 
 from sympy import Matrix,linsolve,symbols
+
 x, y = symbols("x, y")
 from heapq import heappush, heappop
-markers = robot.camera.see()
+markers = Robot.camera.see()
 
 equation_list = []
 
 def equationmaker(distance, xcoord , ycoord, angle):
-    m = distance*tan(math.degrees(angle))
+    m = distance*tan(degrees(angle))
     c = ycoord-(m*xcoord)
     Eqn = [-1*m*x + y - c]
     equation_list.append(Eqn)
 
 def equationsolver(eqa, eqb): # fu+nction to find the common coordinate of 2 lines
-    x = len(equation_list)
-    for i in range(floor(len(x/2))):
+    x = int(len(equation_list))
+    for i in range(floor(x/2)):
         linsolve((eqa, eqb), x, y)    
         
 
@@ -37,18 +38,18 @@ def location_finder(markers):
     ycoord_new = 0
     for i in marker_info:
         equationmaker(i[0],i[3],i[4],i[1])
-    for i in range(math.floor(len(equation_list)/2)):
+    for i in range(floor(len(equation_list)/2)):
        eq_output=equationsolver(equation_list[i], equation_list[random.choice(equation_list)])
        xcoord_new += eq_output[0]
        ycoord_new += eq_output[1]
-    xcoord_new=xcoord_new/(math.floor(len(equation_list)/2))
-    ycoord_new=ycoord_new/(math.floor(len(equation_list)/2))
+    xcoord_new=xcoord_new/(floor(len(equation_list)/2))
+    ycoord_new=ycoord_new/(floor(len(equation_list)/2))
     return (xcoord_new, ycoord_new )
     
     
     
 def angle_finder(xcoord, ycoord):
-    angle = math.atan(ycoord/xcoord)
+    angle = atan(ycoord/xcoord)
     if angle < 0:
         if xcoord < 0:
             angle = abs(angle) + 270
@@ -97,4 +98,4 @@ Marker_Dictionary = {
 }
 
 
-#why does vsc tell me that there is a colon missing???
+#why does vsc tell me that there is a colon missing??? - my IDE tells me no error?
