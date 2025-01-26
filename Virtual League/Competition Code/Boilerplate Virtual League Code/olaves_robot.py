@@ -1,14 +1,14 @@
 # olaves_robot.py
-import math
 
-import sr.robot3 as sr
+import math
 from math import pi, sin, cos, atan2, sqrt
-from typing import List, Tuple, Optional, Union, Callable
-from pid import PIDController
 from time import time
-import numpy as np
 import logging
-import pid
+from typing import List, Tuple, Optional, Union, Callable
+
+import numpy as np
+import sr.robot3 as sr
+from pid import PIDController
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class OlavesRobot(sr.Robot):
             float: The updated competition time in seconds.
         """
         self._last_time_updated = self.get_comp_time()
-        logger.info(f"Updated time: {self._last_time_updated:.3f}s")
+        logger.debug(f"Updated time: {self._last_time_updated:.3f}s")
         return self._last_time_updated
 
     def encoder_pos(
@@ -101,7 +101,7 @@ class OlavesRobot(sr.Robot):
 
         # Get the wheel ticks since last check
         ticks = self.get_motor_ticks()
-        logger.info(f"Encoder ticks received: {ticks}.")
+        logger.debug(f"Encoder ticks received: {ticks}.")
 
         # Update the timestamp to compute velocity based on delta time
         previous_time = self._last_time_updated
@@ -247,15 +247,15 @@ class OlavesRobot(sr.Robot):
         """
         Re-orients the robot to face towards a specified marker.
 
-        This method is not needed for the virtual league and is intentionally left unimplemented.
+        **Note:** This method is not required for the virtual league and remains unimplemented.
 
-        Assumes that the robot is standing directly in front of the marker.
+        Assumes that the robot is positioned directly in front of the marker.
 
         Parameters:
-            target_marker_id (int): The ID of the target marker.
+            target_marker_id (int): The unique identifier of the target marker.
 
         Raises:
-            NotImplementedError: Always raised as this method is not required for the virtual league.
+            NotImplementedError: This method is intentionally unimplemented for the virtual league.
         """
         logger.warning("_turn_to_marker is not implemented for the virtual league.")
         raise NotImplementedError(
@@ -452,22 +452,32 @@ class OlavesRobot(sr.Robot):
         min_power: float = 0.15,
     ) -> tuple[float, float]:
         """
-        Scales the two power values so that:
-          1. Their (population) standard deviation is <= max_std.
-          2. Their mean is shifted to `center`.
-          3. The final values are clamped into [-1.0, 1.0].
-          4. Ensures a minimum power to overcome static friction (and just to stop it from being too jittery).
+        Scales the two motor power values to ensure balanced and stable movement.
+
+        The scaling process adjusts the power values to meet the following criteria:
+        1. The population standard deviation between the two values does not exceed `max_std`.
+        2. The mean of the two values is shifted to the specified `center` value.
+        3. The final values are clamped within the range [-1.0, 1.0] to adhere to motor power limits.
+        4. Applies a minimum power threshold (`min_power`) to overcome static friction and reduce jitter.
 
         Parameters:
-            left (float): Left power value.
-            right (float): Right power value.
-            max_std (float, optional): The maximum allowed standard deviation. Defaults to 3.
-            center (float, optional): The final mean/center value for the two outputs. Defaults to 0.45.
-            min_power (float, optional): Minimum motor power to apply when non-zero. Defaults to 0.15.
+            left (float): Desired power level for the left motor. Range: [-1.0, 1.0].
+            right (float): Desired power level for the right motor. Range: [-1.0, 1.0].
+            max_std (float, optional): Maximum allowed standard deviation between motor powers. Defaults to 3.0.
+            center (float, optional): Target mean value for the motor powers after scaling. Defaults to 0.45.
+            min_power (float, optional): Minimum non-zero power to apply to each motor to ensure movement. Defaults to 0.15.
 
         Returns:
-            (float, float): The scaled (left, right) values.
+            Tuple[float, float]: The scaled (left, right) motor power values, each within [-1.0, 1.0].
+
+        Raises:
+            ValueError: If `min_power` is negative or exceeds motor power limits.
         """
+        if min_power < 0 or min_power > 1.0:
+            logger.error(
+                f"Invalid min_power value: {min_power}. Must be between 0 and 1."
+            )
+            raise ValueError("min_power must be between 0 and 1.")
 
         # Compute mean
         mu = (left + right) / 2.0
@@ -622,24 +632,36 @@ class OlavesRobot(sr.Robot):
 
     def pick_hold_box(self):
         """
-        has to pick up and hold the box (dropping is defined in a different method)
-        Parameters:
-            None
-        Output:
-            Debug of box being picked up
+        Picks up and holds the box.
+
+        This method ensures the robot returns to its initial starting point and engages the servo to pick up the box.
+        It activates the power board to secure the box and logs the action.
+
+        Raises:
+            RuntimeError: If the servo or power board fails to engage.
         """
-        # Make sure it is back at its intial starting point
-        self.servo_board.servos["SERVO"].position = -1
+        try:
+            # Ensure the robot is at the initial starting point
+            self.servo_board.servos["SERVO"].position = -1
+            logger.info("Servo positioned to pick up the box.")
 
-        markers = self.camera.see()
-        for marker in markers:
-            if marker == marker.id:
-                marker_orientation = marker.orientation.yaw
+            markers = self.camera.see()
+            target_id = 123  # Example marker ID to look for
+            for marker in markers:
+                if marker.id == target_id:
+                    marker_orientation = marker.orientation.yaw
+                    logger.debug(f"Marker orientation yaw: {marker_orientation}")
 
-        distance_m = self.arduino.ultrasound_measure(2, 3) * (10**-3)
-        if distance_m == 0:
-            self.power_board.outputs["OUT_H0"].power_on()
-            self.sleep(3)
+            distance_m = self.arduino.ultrasound_measure(2, 3) * 1e-3
+            logger.debug(f"Measured distance: {distance_m} meters.")
+
+            if distance_m == 0:
+                self.power_board.outputs["OUT_H0"].power_on()
+                self.sleep(3)
+                logger.info("Box secured by activating power board.")
+        except Exception as e:
+            logger.error(f"Failed to pick up and hold the box: {e}")
+            raise RuntimeError("Box pickup failed.") from e
 
     def move_to_marker(self, marker_id: int) -> None:
         """
@@ -666,7 +688,7 @@ class OlavesRobot(sr.Robot):
         dist_error = init_dist
         angle_error = marker.position.horizontal_angle
 
-        logger.info(
+        logger.debug(
             f"Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
         )
 
@@ -686,7 +708,7 @@ class OlavesRobot(sr.Robot):
             dist_correction = -dist_pid.getCorrection(dist_error)
             angle_correction = angle_pid.getCorrection(angle_error)
 
-            logger.info(
+            logger.debug(
                 f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
             )
 
@@ -699,7 +721,9 @@ class OlavesRobot(sr.Robot):
                 left_power, right_power, min_power=0.15
             )
 
-            logger.info(f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}")
+            logger.debug(
+                f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+            )
 
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
@@ -724,7 +748,7 @@ class OlavesRobot(sr.Robot):
             dist_error = marker.position.distance / 1000.0
             angle_error = marker.position.horizontal_angle
 
-            logger.info(
+            logger.debug(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
             )
 
@@ -755,7 +779,7 @@ class OlavesRobot(sr.Robot):
         current_coords, phi = current_position[:2], current_position[2]
 
         destination_vector = target_position - current_coords
-        angle = atan2(destination_vector[1] / destination_vector[0])
+        angle = atan2(destination_vector[1], destination_vector[0])
         distance = (destination_vector[0] ** 2 + destination_vector[1] ** 2) ** 0.5
 
         init_dist = distance  # Convert mm to meters
@@ -763,7 +787,7 @@ class OlavesRobot(sr.Robot):
         dist_error = init_dist
         angle_error = angle
 
-        logger.info(
+        logger.debug(
             f"Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
         )
 
@@ -783,7 +807,7 @@ class OlavesRobot(sr.Robot):
             dist_correction = -dist_pid.getCorrection(dist_error)
             angle_correction = angle_pid.getCorrection(angle_error)
 
-            logger.info(
+            logger.debug(
                 f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
             )
 
@@ -796,7 +820,9 @@ class OlavesRobot(sr.Robot):
                 left_power, right_power, min_power=0.15
             )
 
-            logger.info(f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}")
+            logger.debug(
+                f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+            )
 
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
@@ -813,15 +839,15 @@ class OlavesRobot(sr.Robot):
             current_coords, phi = current_position[:2], current_position[2]
 
             destination_vector = target_position - current_coords
-            angle_error = atan2(destination_vector[1] / destination_vector[0])
+            angle_error = atan2(destination_vector[1], destination_vector[0])
             dist_error = (
                 destination_vector[0] ** 2 + destination_vector[1] ** 2
             ) ** 0.5
 
-            logger.info(
+            logger.debug(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
             )
 
         # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
-        logger.info("Marker Reached")
+        logger.info("Position Reached")
