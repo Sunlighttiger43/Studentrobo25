@@ -1,4 +1,5 @@
 # olaves_robot.py
+import math
 
 import sr.robot3 as sr
 from math import pi, sin, cos, atan2, sqrt
@@ -7,6 +8,7 @@ from pid import PIDController
 from time import time
 import numpy as np
 import logging
+import pid
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,9 @@ class OlavesRobot(sr.Robot):
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
         self._last_time_updated: float = 0  # seconds
         self.ticks = [0, 0]
+        arduino = self.arduinos["Arduino1"]
+        my_servo_board = self.servo_board
+        my_power_board = self.power_board
 
     def get_comp_time(self) -> float:
         """
@@ -216,7 +221,7 @@ class OlavesRobot(sr.Robot):
         This method is not needed for the virtual league and is intentionally left unimplemented.
 
         Assumptions:
-            - To be based on new positioning system proposed by Kushal and Francis
+            - To be based on new positioning system proposed by Shehryer and Francis
 
         Parameters:
             marker_id (int): The ID of the marker.
@@ -291,6 +296,7 @@ class OlavesRobot(sr.Robot):
         )
 
     def get_marker_pos(self, marker_id: int) -> Tuple[float, float]:
+        # NEEDS TO BE TESTED - IMPLEMENTED BY AARIT
         """
         Calculates the absolute position of a marker based on its relative position to the robot.
 
@@ -310,8 +316,38 @@ class OlavesRobot(sr.Robot):
         # x = ...  # Calculate x-coordinate
         # y = ...  # Calculate y-coordinate
         # return (x, y)
-        # WILL BE NEEDED TO FIND PILLARS
-        raise NotImplementedError("get_marker_pos method needs to be implemented.")
+        try:
+            markerDistance = self._get_marker_by_id(marker_id)
+        except ValueError:
+            raise ValueError(f"Marker with ID {marker_id} not found.")
+        Robot_current_pos = self.get_pos() #Here I am assuming that the angle is a bearing in radians
+        robot_x, robot_y, robot_theta = Robot_current_pos[0], Robot_current_pos[1], Robot_current_pos[2]
+        markers = self.camera.see()
+        for marker in markers:
+            if marker_id == marker.id:
+                marker_orientation = marker.orientation.yaw
+        #Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
+        x_vector = math.sqrt(2*markerDistance**2 - (markerDistance**2)*math.cos(marker_orientation)) /2
+        y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
+        #Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
+        if (robot_theta > 270 and robot_theta < 360) or (robot_theta > 0 and robot_theta < 90):
+            if marker.orientation.yaw > 0:
+                x_coord = robot_x - x_vector
+                y_coord = y_vector + robot_y
+            else:
+                x_coord = x_vector + robot_x
+                y_coord = y_vector + robot_y
+        else:
+            if marker.orientation.yaw > 0:
+                x_coord = robot_x + x_vector
+                y_coord = y_vector - robot_y
+            else:
+                x_coord = x_vector - robot_x
+                y_coord = y_vector - robot_y
+        return (x_coord, y_coord)
+
+
+
 
     def get_pos(
         self, test_markers: Optional[List[sr.marker]] = None
@@ -353,6 +389,22 @@ class OlavesRobot(sr.Robot):
         raise NotImplementedError(
             "set_robot_orientation method needs to be implemented."
         )
+
+    def move_pos(self, target_position: Tuple[float, float]) -> None:
+        """
+        Moves the robot to a specific (x, y) position using PID controllers for angle and distance.
+
+        The method calculates the required adjustments in motor power to navigate the robot to the desired position accurately.
+
+        Parameters:
+            target_position (Tuple[float, float]): The (x, y) coordinates to move the robot to.
+
+        Raises:
+            NotImplementedError: Indicates that the method's implementation is pending.
+        """
+        logger.info(f"Moving to position {target_position}.")
+        # TODO: Implement movement to position using PID controllers
+        raise NotImplementedError("move_pos method needs to be implemented.")
 
     def power(
         self,
@@ -562,8 +614,49 @@ class OlavesRobot(sr.Robot):
             case _:
                 logger.warning(f"Unknown marker ID: {marker_id}")
                 return None
+def detect_pallets(self):
+        '''
+        Determines the amount of high rise pallets the robot can see for our team
+        We do this by checking if the pitch angle and if it is tilted up (ie less than 0 radians)
+        Parameters:
+            None
+        Output:
+            list output [numberofhighrises, onfloormarkers]
+        '''
 
-    def move_to_marker(self, marker_id: int) -> None:
+        logger.debug(f"Determining the number of high rises from our team")
+
+        markers = self.camera.see()
+        highrisers = 0
+        for marker in markers:
+            if marker.orientation.pitch < 0 and (self.get_marker_type(marker) == "pallet0" or self.get_marker_type(marker) == "pallet1" or self.get_marker_type(marker) == "pallet2" or self.get_marker_type(marker) == "pallet3"):
+                highrisers = highrisers + 1
+        return [highrisers, 6-highrisers]
+
+
+    def pick_hold_box(self):
+        '''
+        has to pick up and hold the box (dropping is defined in a different method)
+        Parameters:
+            None
+        Output:
+            Debug of box being picked up
+        '''
+        #Make sure it is back at its intial starting point
+        self.servo_board.servos["SERVO"].position = -1
+
+
+        markers = self.camera.see()
+        for marker in markers:
+            if marker == marker.id:
+                marker_orientation = marker.orientation.yaw
+
+        distance_m = self.arduino.ultrasound_measure(2, 3) * (10**-3)
+        if distance_m == 0:
+            self.power_board.outputs["OUT_H0"].power_on()
+            self.sleep(3)
+
+def move_to_marker(self, marker_id: int) -> None:
         """
         Moves the robot to a specified marker using PID controllers.
 
