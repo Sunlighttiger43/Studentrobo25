@@ -2,6 +2,10 @@
 
 import logging
 from states import main
+from olaves_robot import OlavesRobot
+
+r = OlavesRobot()
+
 
 def configure_logging():
     """
@@ -12,9 +16,9 @@ def configure_logging():
     """
     # Set the default logging level and format
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     )
+
 
 def run_robot():
     """
@@ -22,9 +26,13 @@ def run_robot():
 
     This function configures logging and then starts the main state machine.
     """
-    configure_logging()
-    # Call main from states
-    main()
+
+    r.move_pos((0, 1))
+
+    # configure_logging()
+    # # Call main from states
+    # main()
+
 
 if __name__ == "__main__":
     run_robot()

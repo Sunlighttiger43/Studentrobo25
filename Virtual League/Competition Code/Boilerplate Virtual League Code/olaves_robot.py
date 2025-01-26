@@ -1,8 +1,8 @@
 # olaves_robot.py
 
 import sr.robot3 as sr
-from math import pi
-from typing import List, Tuple, Optional, Union
+from math import pi, sin, cos, atan2, sqrt
+from typing import List, Tuple, Optional, Union, Callable
 from pid import PIDController
 from time import time
 import numpy as np
@@ -16,6 +16,9 @@ class OlavesRobot(sr.Robot):
         super().__init__()
         logger.info("Initialising OlavesRobot")
         self.init_time: float = time()
+        self._position: np.ndarray = [0, 0, 0]  # x, y, theta
+        self._last_time_updated: float = 0  # seconds
+        self.ticks = [0, 0]
 
     def get_comp_time(self) -> float:
         """
@@ -29,6 +32,128 @@ class OlavesRobot(sr.Robot):
         elapsed_time = time() - self.init_time
         logger.debug(f"Computed elapsed time: {elapsed_time} seconds.")
         return elapsed_time
+
+    def get_motor_ticks(self) -> Tuple[int, int]:
+        """Returns the change in ticks since the last time it was checked.
+
+        Calls the ruggeduino to return the total ticks in the left and right wheels. The
+        ruggeduino attaches to interupts functions that increment a count for each tick of
+        the encoder.
+
+        Returns:
+            Tuple[int, int]:
+                A tuple of (delta_left_ticks, delta_right_ticks), representing
+                the change in wheel encoder ticks since this method was last called.
+        """
+        logger.debug("Requesting motor ticks from ruggeduino.")
+        tickL = int(self.arduino.command(">"))
+        tickR = int(self.arduino.command("<"))
+        logger.debug(f"Raw tick counts from Arduino: left={tickL}, right={tickR}")
+
+        last = self.ticks
+        self.ticks = (tickL, tickR)
+        delta = (self.ticks[0] - last[0], self.ticks[1] - last[1])
+        logger.debug(f"Delta ticks computed: left={delta[0]}, right={delta[1]}")
+
+        return delta
+
+    def _update_time(self):
+        """
+        Updates and returns the internal timestamp.
+
+        This method records the current competition time (in seconds since the
+        robot started) to `self._last_time_updated` and logs the new value.
+
+        Returns:
+            float: The updated competition time in seconds.
+        """
+        self._last_time_updated = self.get_comp_time()
+        logger.info(f"Updated time: {self._last_time_updated:.3f}s")
+        return self._last_time_updated
+
+    def encoder_pos(
+        self,
+    ) -> np.ndarray:
+        """
+        Calculates the robot's position and orientation based on encoder ticks.
+
+        Uses the difference in wheel rotations (based on encoder ticks) to update
+        and return the robot's estimated position as an array [x, y, theta].
+
+        Returns:
+            np.ndarray: A 3-element numpy array containing the updated
+                        [x, y, theta] of the robot.
+        """
+
+        # MATHS FROM: https://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
+
+        logger.info("Calculating position from encoder ticks.")
+
+        TICKS_PER_ROT = 2880
+        WHEEL_RADIUS = 0.072
+        ROBOT_WIDTH = 0.42
+        HALF_ROBOT_WIDTH = ROBOT_WIDTH / 2
+
+        # Get the wheel ticks since last check
+        ticks = self.get_motor_ticks()
+        logger.info(f"Encoder ticks received: {ticks}.")
+
+        # Update the timestamp to compute velocity based on delta time
+        previous_time = self._last_time_updated
+        delta_t = self._update_time() - previous_time
+
+        r_x, r_y, r_theta = self._position
+
+        # Convert ticks to wheel rotation (in rotations) then to radians
+        delta_phi = tuple(tick / TICKS_PER_ROT for tick in ticks)
+
+        # Convert rotations to linear velocities (v_l, v_r)
+        v_l, v_r = (phi * 2 * pi * WHEEL_RADIUS / delta_t for phi in delta_phi)
+
+        # Compute the Instantaneous Center of Curvature (ICC)
+        if (v_r - v_l) != 0:
+            ICC_r = HALF_ROBOT_WIDTH * (v_l + v_r) / (v_r - v_l)
+        else:
+            ICC_r = HALF_ROBOT_WIDTH * (v_l + v_r) / 1e-10  # Avoid division by zero
+
+        ICC_omega = (v_r - v_l) / ROBOT_WIDTH
+        ICC = np.array([r_x - ICC_r * sin(r_theta), r_y + ICC_r * cos(r_theta), 0])
+
+        # Rotation matrix approach
+        rotation_matrix = np.array(
+            [
+                [cos(ICC_omega * delta_t), -sin(ICC_omega * delta_t), 0],
+                [sin(ICC_omega * delta_t), cos(ICC_omega * delta_t), 0],
+                [0, 0, 1],
+            ]
+        )
+
+        pos = (rotation_matrix @ (self._position - ICC)) + np.array(
+            [ICC[0], ICC[1], ICC_omega * delta_t]
+        )
+        self._position = pos
+
+        logger.info(
+            f"Encoder position updated to [x={pos[0]:.3f}, y={pos[1]:.3f}, \n"
+            f"theta={pos[2]:.3f}] after {delta_t:.3f}s."
+        )
+
+        return pos
+
+    def move_to_pos(self, designated_position):
+        """
+        Moves the robot to a designated (x, y) position using a simple PID-driven approach.
+
+        This method calculates the distance and bearing to the target position and
+        applies PID control for both angle and distance. The robot updates its
+        position estimate via encoders continuously until it is within a given
+        positional tolerance of the target.
+
+        Parameters:
+            designated_position (np.ndarray or tuple): A 2-element array/tuple [x, y]
+                                                    specifying the target coordinates.
+        """
+        # TODO: Implement this fr fr
 
     def sleep(self, duration: float) -> None:
         """
@@ -185,23 +310,8 @@ class OlavesRobot(sr.Robot):
         # x = ...  # Calculate x-coordinate
         # y = ...  # Calculate y-coordinate
         # return (x, y)
+        # WILL BE NEEDED TO FIND PILLARS
         raise NotImplementedError("get_marker_pos method needs to be implemented.")
-
-    def move_to_marker(self, marker_id: int) -> None:
-        """
-        Moves the robot to a specified marker and orients it appropriately.
-
-        Utilises PID controllers to minimise the distance and angle to the target marker within a set tolerance.
-
-        Parameters:
-            marker_id (int): The ID of the target marker.
-
-        Raises:
-            NotImplementedError: Indicates that the method's implementation is pending.
-        """
-        logger.info(f"Moving to marker ID {marker_id}.")
-        # TODO: Implement movement logic using PID controllers
-        raise NotImplementedError("move_to_marker method needs to be implemented.")
 
     def get_pos(
         self, test_markers: Optional[List[sr.marker]] = None
@@ -244,22 +354,6 @@ class OlavesRobot(sr.Robot):
             "set_robot_orientation method needs to be implemented."
         )
 
-    def move_pos(self, target_position: Tuple[float, float]) -> None:
-        """
-        Moves the robot to a specific (x, y) position using PID controllers for angle and distance.
-
-        The method calculates the required adjustments in motor power to navigate the robot to the desired position accurately.
-
-        Parameters:
-            target_position (Tuple[float, float]): The (x, y) coordinates to move the robot to.
-
-        Raises:
-            NotImplementedError: Indicates that the method's implementation is pending.
-        """
-        logger.info(f"Moving to position {target_position}.")
-        # TODO: Implement movement to position using PID controllers
-        raise NotImplementedError("move_pos method needs to be implemented.")
-
     def power(
         self,
         wheels: Tuple[float, float],
@@ -287,8 +381,8 @@ class OlavesRobot(sr.Robot):
             f"Original wheel powers: {wheels}. Corrected wheel powers: {corrected_wheels}."
         )
         self._prev_power = corrected_wheels
-        self.motor_board.motors[0].power = self._clamp(corrected_wheels[0])
         self.motor_board.motors[1].power = self._clamp(corrected_wheels[1])
+        self.motor_board.motors[0].power = self._clamp(corrected_wheels[0])
         logger.info(
             f"Setting motor powers to {self._prev_power} for {duration} seconds."
         )
@@ -296,7 +390,6 @@ class OlavesRobot(sr.Robot):
         if off:
             self.motor_board.motors[0].power = 0.0
             self.motor_board.motors[1].power = 0.0
-            self.sleep(0.01)
             logger.info("Motors turned off.")
 
     @staticmethod
@@ -317,6 +410,85 @@ class OlavesRobot(sr.Robot):
         clamped_value = max(min_value, min(max_value, value))
         logger.debug(f"Clamping value {value} to {clamped_value}.")
         return clamped_value
+
+    def _scale(
+        self,
+        left: float,
+        right: float,
+        max_std: float = 3,
+        center: float = 0.45,
+        min_power: float = 0.15,
+    ) -> tuple[float, float]:
+        """
+        Scales the two power values so that:
+          1. Their (population) standard deviation is <= max_std.
+          2. Their mean is shifted to `center`.
+          3. The final values are clamped into [-1.0, 1.0].
+          4. Ensures a minimum power to overcome static friction (and just to stop it from being too jittery).
+
+        Parameters:
+            left (float): Left power value.
+            right (float): Right power value.
+            max_std (float, optional): The maximum allowed standard deviation. Defaults to 3.
+            center (float, optional): The final mean/center value for the two outputs. Defaults to 0.45.
+            min_power (float, optional): Minimum motor power to apply when non-zero. Defaults to 0.15.
+
+        Returns:
+            (float, float): The scaled (left, right) values.
+        """
+
+        # Compute mean
+        mu = (left + right) / 2.0
+
+        # Compute population standard deviation for two points
+        sd = sqrt(((left - mu) ** 2 + (right - mu) ** 2) / 2.0)
+
+        # Scale down if std exceeds max_std
+        if sd > max_std and sd > 1e-9:
+            scale_factor = max_std / sd
+            left = mu + scale_factor * (left - mu)
+            right = mu + scale_factor * (right - mu)
+
+        # Shift mean to center
+        new_mu = (left + right) / 2.0
+        shift = center - new_mu
+        left += shift
+        right += shift
+
+        # Apply minimum power threshold
+        left, right = self._apply_min_power(left, right, min_power)
+
+        # Clamp to [-1.0, 1.0]
+        left = self._clamp(left, -1.0, 1.0)
+        right = self._clamp(right, -1.0, 1.0)
+
+        return (left, right)
+
+    def _apply_min_power(
+        self, left: float, right: float, min_power: float = 0.15
+    ) -> tuple[float, float]:
+        """
+        Applies a minimum power threshold to both left and right motor powers.
+
+        Parameters:
+            left (float): Left motor power.
+            right (float): Right motor power.
+            min_power (float, optional): Minimum power to apply. Defaults to 0.15.
+
+        Returns:
+            (float, float): Adjusted (left, right) motor powers.
+        """
+
+        # TODO: fix to allow turning
+
+        def apply_min(val):
+            if 0.0 < val < min_power:
+                return min_power
+            elif -min_power < val < 0.0:
+                return -min_power
+            return val
+
+        return (apply_min(left), apply_min(right))
 
     def _wonky_wheels_correction(
         self, wheels: Tuple[float, float]
@@ -390,3 +562,93 @@ class OlavesRobot(sr.Robot):
             case _:
                 logger.warning(f"Unknown marker ID: {marker_id}")
                 return None
+
+    def move_to_marker(self, marker_id: int) -> None:
+        """
+        Moves the robot to a specified marker using PID controllers.
+
+        Parameters:
+            marker_id (int): The ID of the target marker.
+        """
+
+        DIST_TOLERANCE = 0.2  # meters
+        ANGLE_TOLERANCE = 0.1  # radians
+        DIST_TO_TIME = 0.5  # Base duration for movement
+
+        markers = [m for m in self.camera.see() if m.id == marker_id]
+        if not markers:
+            logger.error(f"Marker {marker_id} not seen initially.")
+            # TODO: Add some handling logic for when a marker can't be seen
+            return
+
+        marker = markers[0]
+        init_dist = marker.position.distance / 1000.0  # Convert mm to meters
+
+        dist_error = init_dist
+        angle_error = marker.position.horizontal_angle
+
+        logger.info(
+            f"Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
+        )
+
+        # Initialise PID controllers
+        # Distance PID: Only P and I to prevent aggressive changes
+        dist_pid = PIDController(
+            sp=0.0, p=0.05, i=0.01, d=0.0, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        # Angle PID: P and D for responsive turning with damping
+        angle_pid = PIDController(
+            sp=0.0, p=0.15, i=0.01, d=0.05, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        while dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE:
+            # Calculate PID corrections
+            dist_correction = -dist_pid.getCorrection(dist_error)
+            angle_correction = angle_pid.getCorrection(angle_error)
+
+            logger.info(
+                f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
+            )
+
+            # Convert corrections into left/right motor power
+            left_power = dist_correction - angle_correction
+            right_power = dist_correction + angle_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.15
+            )
+
+            logger.info(f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}")
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.5 * DIST_TO_TIME),
+                DIST_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+            # Update marker information
+            markers = [m for m in self.camera.see() if m.id == marker_id]
+            if markers:
+                marker = markers[0]
+            else:
+                logger.error(f"Marker {marker_id} lost. Exiting movement.")
+                self.power((0.0, 0.0), 0.0)
+                return
+
+            # Update errors
+            dist_error = marker.position.distance / 1000.0
+            angle_error = marker.position.horizontal_angle
+
+            logger.info(
+                f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
+            )
+
+        # Stop the robot once target is reached
+        self.power((0.0, 0.0), 0.0)
+        logger.info("Marker Reached")

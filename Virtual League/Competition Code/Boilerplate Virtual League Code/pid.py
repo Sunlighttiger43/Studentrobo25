@@ -1,38 +1,57 @@
 # pid.py
 
-import random
+import time
+
 
 class PIDController:
     """
-    A simple PID (Proportional, Integral, Derivative) controller implementation.
-
-    This controller calculates a correction value (control signal) to reduce
-    the error between a setpoint (SP) and the current process variable (PV).
+    A PID (Proportional, Integral, Derivative) controller with anti-windup
+    and derivative filtering.
     """
-    prev = 0
-    total = 0
 
-    def __init__(self, sp: float, p: float = 0, i: float = 0, d: float = 0):
+    def __init__(
+        self,
+        sp: float,
+        p: float = 0.0,
+        i: float = 0.0,
+        d: float = 0.0,
+        integrator_min: float = -10.0,
+        integrator_max: float = 10.0,
+        derivative_filter_coeff: float = 0.8,
+    ):
         """
-        Initialises the PIDController with given gain values.
+        Initialises the PIDController with given gain values and parameters.
 
         Parameters:
             sp (float): The setpoint (target value).
-            p (float, optional): Proportional gain. Defaults to 0.
-            i (float, optional): Integral gain. Defaults to 0.
-            d (float, optional): Derivative gain. Defaults to 0.
+            p (float, optional): Proportional gain. Defaults to 0.0.
+            i (float, optional): Integral gain. Defaults to 0.0.
+            d (float, optional): Derivative gain. Defaults to 0.0.
+            integrator_min (float, optional): Minimum integral term. Defaults to -10.0.
+            integrator_max (float, optional): Maximum integral term. Defaults to 10.0.
+            derivative_filter_coeff (float, optional): Coefficient for derivative filtering (0 < coeff < 1). Defaults to 0.8.
         """
         self.sp = sp
         self.p = p
         self.i = i
         self.d = d
 
+        # Anti-windup limits
+        self.integrator_min = integrator_min
+        self.integrator_max = integrator_max
+
+        # Derivative filter coefficient
+        self.derivative_filter_coeff = derivative_filter_coeff
+
+        # Internal state
+        self.prev_error = 0.0
+        self.integral = 0.0
+        self.prev_derivative = 0.0
+        self.last_time = None
+
     def getCorrection(self, pv: float) -> float:
         """
         Computes the control signal (correction) based on the current process variable.
-
-        The control signal is calculated as:
-            correction = P * error + I * accumulated_error + D * (error - previous_error)
 
         Parameters:
             pv (float): The current process variable.
@@ -40,11 +59,51 @@ class PIDController:
         Returns:
             float: The calculated correction value.
         """
+        current_time = time.time()
+
+        # Calculate time difference
+        if self.last_time is None:
+            dt = 0.0
+        else:
+            dt = current_time - self.last_time
+
+        self.last_time = current_time
+
+        # Calculate error
         error = self.sp - pv
-        self.total += error
-        res = (self.p * error) + (self.i * self.total) + (self.d * (error - self.prev))
-        self.prev = error
-        return res
+
+        # Proportional term
+        p_term = self.p * error
+
+        # Integral term with anti-windup
+        if dt > 0.0:
+            self.integral += error * dt
+            # Clamp integral to prevent windup
+            self.integral = max(
+                self.integrator_min, min(self.integrator_max, self.integral)
+            )
+        i_term = self.i * self.integral
+
+        # Derivative term with filtering
+        if dt > 0.0:
+            derivative = (error - self.prev_error) / dt
+        else:
+            derivative = 0.0
+
+        # Apply low-pass filter to derivative
+        derivative_filtered = (
+            self.derivative_filter_coeff * self.prev_derivative
+            + (1 - self.derivative_filter_coeff) * derivative
+        )
+        d_term = self.d * derivative_filtered
+
+        self.prev_derivative = derivative_filtered
+        self.prev_error = error
+
+        # PID output
+        correction = p_term + i_term + d_term
+
+        return correction
 
     def reset(
         self,
@@ -62,24 +121,16 @@ class PIDController:
             i (float, optional): The new integral gain. If None, it remains unchanged.
             d (float, optional): The new derivative gain. If None, it remains unchanged.
         """
-        self.prev = 0
-        self.total = 0
-        if sp != None:
+        self.prev_error = 0.0
+        self.integral = 0.0
+        self.prev_derivative = 0.0
+        self.last_time = None
+
+        if sp is not None:
             self.sp = sp
-        if p != None:
+        if p is not None:
             self.p = p
-        if i != None:
+        if i is not None:
             self.i = i
-        if d != None:
+        if d is not None:
             self.d = d
-
-
-if __name__ == "__main__":
-    sp = 0
-    pv = 30
-    pid = PIDController(sp, 0.3, 0.3, 0.3)
-    while abs(pv - sp) > 1:
-        print(pv)
-        pv += random.randint(-10, 10)
-        pv += pid.getCorrection(pv)
-    print(pv)
