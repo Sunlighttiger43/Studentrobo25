@@ -145,21 +145,6 @@ class OlavesRobot(sr.Robot):
 
         return pos
 
-    def move_to_pos(self, designated_position):
-        """
-        Moves the robot to a designated (x, y) position using a simple PID-driven approach.
-
-        This method calculates the distance and bearing to the target position and
-        applies PID control for both angle and distance. The robot updates its
-        position estimate via encoders continuously until it is within a given
-        positional tolerance of the target.
-
-        Parameters:
-            designated_position (np.ndarray or tuple): A 2-element array/tuple [x, y]
-                                                    specifying the target coordinates.
-        """
-        # TODO: Implement this fr fr
-
     def sleep(self, duration: float) -> None:
         """
         Pauses execution for a specified duration.
@@ -320,17 +305,31 @@ class OlavesRobot(sr.Robot):
             markerDistance = self._get_marker_by_id(marker_id)
         except ValueError:
             raise ValueError(f"Marker with ID {marker_id} not found.")
-        Robot_current_pos = self.get_pos() #Here I am assuming that the angle is a bearing in radians
-        robot_x, robot_y, robot_theta = Robot_current_pos[0], Robot_current_pos[1], Robot_current_pos[2]
+        Robot_current_pos = (
+            self.get_pos()
+        )  # Here I am assuming that the angle is a bearing in radians
+        robot_x, robot_y, robot_theta = (
+            Robot_current_pos[0],
+            Robot_current_pos[1],
+            Robot_current_pos[2],
+        )
         markers = self.camera.see()
         for marker in markers:
             if marker_id == marker.id:
                 marker_orientation = marker.orientation.yaw
-        #Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
-        x_vector = math.sqrt(2*markerDistance**2 - (markerDistance**2)*math.cos(marker_orientation)) /2
+        # Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
+        x_vector = (
+            math.sqrt(
+                2 * markerDistance**2
+                - (markerDistance**2) * math.cos(marker_orientation)
+            )
+            / 2
+        )
         y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
-        #Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
-        if (robot_theta > 270 and robot_theta < 360) or (robot_theta > 0 and robot_theta < 90):
+        # Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
+        if (robot_theta > 270 and robot_theta < 360) or (
+            robot_theta > 0 and robot_theta < 90
+        ):
             if marker.orientation.yaw > 0:
                 x_coord = robot_x - x_vector
                 y_coord = y_vector + robot_y
@@ -345,9 +344,6 @@ class OlavesRobot(sr.Robot):
                 x_coord = x_vector - robot_x
                 y_coord = y_vector - robot_y
         return (x_coord, y_coord)
-
-
-
 
     def get_pos(
         self, test_markers: Optional[List[sr.marker]] = None
@@ -389,22 +385,6 @@ class OlavesRobot(sr.Robot):
         raise NotImplementedError(
             "set_robot_orientation method needs to be implemented."
         )
-
-    def move_pos(self, target_position: Tuple[float, float]) -> None:
-        """
-        Moves the robot to a specific (x, y) position using PID controllers for angle and distance.
-
-        The method calculates the required adjustments in motor power to navigate the robot to the desired position accurately.
-
-        Parameters:
-            target_position (Tuple[float, float]): The (x, y) coordinates to move the robot to.
-
-        Raises:
-            NotImplementedError: Indicates that the method's implementation is pending.
-        """
-        logger.info(f"Moving to position {target_position}.")
-        # TODO: Implement movement to position using PID controllers
-        raise NotImplementedError("move_pos method needs to be implemented.")
 
     def power(
         self,
@@ -532,6 +512,7 @@ class OlavesRobot(sr.Robot):
         """
 
         # TODO: fix to allow turning
+        # Right now it sets the max power to 0.15, which means negative powers are disallowed, preventing turning ability
 
         def apply_min(val):
             if 0.0 < val < min_power:
@@ -614,37 +595,41 @@ class OlavesRobot(sr.Robot):
             case _:
                 logger.warning(f"Unknown marker ID: {marker_id}")
                 return None
-def detect_pallets(self):
-        '''
+
+    def detect_pallets(self):
+        """
         Determines the amount of high rise pallets the robot can see for our team
         We do this by checking if the pitch angle and if it is tilted up (ie less than 0 radians)
         Parameters:
             None
         Output:
             list output [numberofhighrises, onfloormarkers]
-        '''
+        """
 
         logger.debug(f"Determining the number of high rises from our team")
 
         markers = self.camera.see()
         highrisers = 0
         for marker in markers:
-            if marker.orientation.pitch < 0 and (self.get_marker_type(marker) == "pallet0" or self.get_marker_type(marker) == "pallet1" or self.get_marker_type(marker) == "pallet2" or self.get_marker_type(marker) == "pallet3"):
+            if marker.orientation.pitch < 0 and (
+                self.get_marker_type(marker) == "pallet0"
+                or self.get_marker_type(marker) == "pallet1"
+                or self.get_marker_type(marker) == "pallet2"
+                or self.get_marker_type(marker) == "pallet3"
+            ):
                 highrisers = highrisers + 1
-        return [highrisers, 6-highrisers]
-
+        return [highrisers, 6 - highrisers]
 
     def pick_hold_box(self):
-        '''
+        """
         has to pick up and hold the box (dropping is defined in a different method)
         Parameters:
             None
         Output:
             Debug of box being picked up
-        '''
-        #Make sure it is back at its intial starting point
+        """
+        # Make sure it is back at its intial starting point
         self.servo_board.servos["SERVO"].position = -1
-
 
         markers = self.camera.see()
         for marker in markers:
@@ -656,13 +641,14 @@ def detect_pallets(self):
             self.power_board.outputs["OUT_H0"].power_on()
             self.sleep(3)
 
-def move_to_marker(self, marker_id: int) -> None:
+    def move_to_marker(self, marker_id: int) -> None:
         """
         Moves the robot to a specified marker using PID controllers.
 
         Parameters:
             marker_id (int): The ID of the target marker.
         """
+        logger.info(f"Moving to Marker: {marker_id}")
 
         DIST_TOLERANCE = 0.2  # meters
         ANGLE_TOLERANCE = 0.1  # radians
@@ -737,6 +723,100 @@ def move_to_marker(self, marker_id: int) -> None:
             # Update errors
             dist_error = marker.position.distance / 1000.0
             angle_error = marker.position.horizontal_angle
+
+            logger.info(
+                f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
+            )
+
+        # Stop the robot once target is reached
+        self.power((0.0, 0.0), 0.0)
+        logger.info("Marker Reached")
+
+    def move_pos(self, target_position: Tuple[float, float]) -> None:
+        """
+        Moves the robot to a specific (x, y) position using PID controllers for angle and distance.
+
+        The method calculates the required adjustments in motor power to navigate the robot to the desired position accurately.
+
+        Parameters:
+            target_position (Tuple[float, float]): The (x, y) coordinates to move the robot to.
+
+        Raises:
+            NotImplementedError: Indicates that the method's implementation is pending.
+        """
+        logger.info(f"Moving to position {target_position}.")
+
+        DIST_TOLERANCE = 0.2  # meters
+        ANGLE_TOLERANCE = 0.1  # radians
+        DIST_TO_TIME = 0.5  # Base duration for movement
+
+        current_position = self.get_pos()
+
+        current_coords, phi = current_position[:2], current_position[2]
+
+        destination_vector = target_position - current_coords
+        angle = atan2(destination_vector[1] / destination_vector[0])
+        distance = (destination_vector[0] ** 2 + destination_vector[1] ** 2) ** 0.5
+
+        init_dist = distance  # Convert mm to meters
+
+        dist_error = init_dist
+        angle_error = angle
+
+        logger.info(
+            f"Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
+        )
+
+        # Initialise PID controllers
+        # Distance PID: Only P and I to prevent aggressive changes
+        dist_pid = PIDController(
+            sp=0.0, p=0.05, i=0.01, d=0.0, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        # Angle PID: P and D for responsive turning with damping
+        angle_pid = PIDController(
+            sp=0.0, p=0.15, i=0.01, d=0.05, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        while dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE:
+            # Calculate PID corrections
+            dist_correction = -dist_pid.getCorrection(dist_error)
+            angle_correction = angle_pid.getCorrection(angle_error)
+
+            logger.info(
+                f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
+            )
+
+            # Convert corrections into left/right motor power
+            left_power = dist_correction - angle_correction
+            right_power = dist_correction + angle_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.15
+            )
+
+            logger.info(f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}")
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.5 * DIST_TO_TIME),
+                DIST_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+            current_position = self.get_pos()
+
+            current_coords, phi = current_position[:2], current_position[2]
+
+            destination_vector = target_position - current_coords
+            angle_error = atan2(destination_vector[1] / destination_vector[0])
+            dist_error = (
+                destination_vector[0] ** 2 + destination_vector[1] ** 2
+            ) ** 0.5
 
             logger.info(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
