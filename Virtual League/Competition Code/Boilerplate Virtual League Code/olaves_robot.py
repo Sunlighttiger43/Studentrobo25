@@ -304,6 +304,7 @@ class OlavesRobot(sr.Robot):
         try:
             markerDistance = self._get_marker_by_id(marker_id)
         except ValueError:
+            markerOrientation = None
             raise ValueError(f"Marker with ID {marker_id} not found.")
         Robot_current_pos = (
             self.get_pos()
@@ -327,8 +328,8 @@ class OlavesRobot(sr.Robot):
         )
         y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
         # Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
-        if (robot_theta > 270 and robot_theta < 360) or (
-            robot_theta > 0 and robot_theta < 90
+        if (robot_theta > (1.5)*pi and robot_theta < 2*pi) or (
+            robot_theta > 0 and robot_theta < 0.5*pi
         ):
             if marker.orientation.yaw > 0:
                 x_coord = robot_x - x_vector
