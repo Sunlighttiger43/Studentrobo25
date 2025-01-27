@@ -194,9 +194,9 @@ class OlavesRobot(sr.Robot):
         logger.info(f"Moving {direction} by {abs(distance)} meters.")
 
         if distance > 0:
-            self.power((0.4, 0.5), distance * DIST_TO_TIME)
+            self.power((0.4, 0.4), distance * DIST_TO_TIME)
         else:
-            self.power((-0.4, -0.5), abs(distance) * DIST_TO_TIME)
+            self.power((-0.4, -0.4), abs(distance) * DIST_TO_TIME)
         logger.info(f"Completed move {direction}.")
 
     def get_marker_orientation(self, marker_id: int) -> float:
