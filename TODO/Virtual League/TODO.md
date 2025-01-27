@@ -14,13 +14,13 @@
     Issues:
 
     Incorrect Assignment:
-        markerDistance = self._get_marker_by_id(marker_id) assigns a sr.Marker object instead of distance.
+        markerDistance = self._get_marker_by_id(marker_id) assigns a sr.Marker object instead of distance. (DONE)
 
     Angle Ranges:
-        robot_theta > 270 and robot_theta < 360 uses degrees, but angles are in radians.
+        robot_theta > 270 and robot_theta < 360 uses degrees, but angles are in radians. (DONE)
 
     Incomplete Logic:
-        After identifying marker_orientation, there’s no guarantee it's set before use.
+        After identifying marker_orientation, there’s no guarantee it's set before use. (DONE)
 
     Potential Unbound Variable:
         If no marker matches marker_id, marker_orientation remains undefined.
