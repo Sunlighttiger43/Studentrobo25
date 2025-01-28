@@ -307,13 +307,16 @@ class OlavesRobot(sr.Robot):
         # y = ...  # Calculate y-coordinate
         # return (x, y)
         markers = self.camera.see()
+        #Just so that we are not left with unassigned variable names that might pull up an error in the program.
+        markerOrientation = 0
+        markerDistance = 0
         for marker in markers:
             if marker_id == marker.id:
                 markerOrientation = marker.orientation.yaw
                 MarkerDistance = marker.position.distance / 1000
 
         #To check if the marker is actually visible or not
-        if markerOrientation == None or MarkerDistance == None:
+        if markerOrientation == 0 or MarkerDistance == 0:
             raise ValueError(f"Marker with ID {marker_id} not found.")
 
 
