@@ -23,6 +23,13 @@ class OlavesRobot(sr.Robot):
         self.ticks = [0, 0]
         self.servo_board.servos[0].position = 1
 
+        pallet_dict = {
+            0: list(i for i in range(100, 120)),
+            1: list(i for i in range(120, 140)),
+            2: list(i for i in range(140, 160)),
+            3: list(i for i in range(160, 180)),
+        }
+
     def get_comp_time(self) -> float:
         """
         Returns the time elapsed since the robot was initialised.
@@ -554,6 +561,9 @@ class OlavesRobot(sr.Robot):
             "_wonky_wheels_correction is not implemented for the virtual league."
         )
         return wheels  # Assuming no correction needed in simulation
+
+    def zone_pallets(self) -> List[sr.marker]:
+        return self.zone_pallets(self.zone)
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """

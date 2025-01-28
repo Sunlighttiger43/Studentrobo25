@@ -5,7 +5,7 @@
 - Implement move_pos()  (COMPLETED: KIROLLOS)
 - def pick_up_box() method (COMPLETED: KIROLLOS TO BE TESTED)
 - def release_box() method (COMPLETED: KIROLLOS TO BE TESTED)
-- implement get_our_markers() to account for the fact our robot could be in any one of the 4 zones (IN PROGRESS: )
+- implement zone_pallets() to account for the fact our robot could be in any one of the 4 zones (COMPLETED: KIROLLOS)
 - Implement knocking_state() based off of the pseudocode in states.py (maybe Agastya can do this) (IN PROGRESS: )
 - Main program loop (IN PROGRESS: )
 
