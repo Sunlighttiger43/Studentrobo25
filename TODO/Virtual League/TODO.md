@@ -10,7 +10,7 @@
 - Main program loop (IN PROGRESS: )
 
 # Bug Fixing and Logical Errors
-- get_marker_pos (IN PROGRESS: AARIT)
+- get_marker_pos (IN PROGRESS: AARIT - DONE MAYBE???)
     Issues:
 
     Incorrect Assignment:
@@ -23,7 +23,7 @@
         After identifying marker_orientation, there’s no guarantee it's set before use. (DONE)
 
     Potential Unbound Variable:
-        If no marker matches marker_id, marker_orientation remains undefined.
+        If no marker matches marker_id, marker_orientation remains undefined. (DONE)
 
 - pick_box_hold (COMPLETED: KIROLLOS)
     Issues:
