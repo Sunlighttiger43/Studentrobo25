@@ -3,8 +3,8 @@
     - encoder_pos implementation (COMPLETED: KIROLLOS)
     - camera_pos implementation (IN PROGRESS: )
 - Implement move_pos()  (COMPLETED: KIROLLOS)
-- def pick_box() method (IN PROGRESS: )
-- def put_down_box() method (IN PROGRESS: )
+- def pick_up_box() method (COMPLETED: KIROLLOS TO BE TESTED)
+- def release_box() method (COMPLETED: KIROLLOS TO BE TESTED)
 - implement get_our_markers() to account for the fact our robot could be in any one of the 4 zones (IN PROGRESS: )
 - Implement knocking_state() based off of the pseudocode in states.py (maybe Agastya can do this) (IN PROGRESS: )
 - Main program loop (IN PROGRESS: )
@@ -25,12 +25,12 @@
     Potential Unbound Variable:
         If no marker matches marker_id, marker_orientation remains undefined.
 
-- pick_box_hold (IN PROGRESS: )
+- pick_box_hold (COMPLETED: KIROLLOS)
     Issues:
 
     Compares a marker object to an integer (marker.id), which is always False.
 
-- move_to_marker and move_pos (IN PROGRESS: )
+- move_to_marker and move_pos (COMPLETED: KIROLLOS)
     Issues:
 
     No termination condition beyond error tolerances. If errors never reach tolerances, it could loop indefinitely.

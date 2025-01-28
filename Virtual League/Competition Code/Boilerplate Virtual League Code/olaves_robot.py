@@ -21,9 +21,7 @@ class OlavesRobot(sr.Robot):
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
         self._last_time_updated: float = 0  # seconds
         self.ticks = [0, 0]
-        arduino = self.arduinos["Arduino1"]
-        my_servo_board = self.servo_board
-        my_power_board = self.power_board
+        self.servo_board.servos[0].position = 1
 
     def get_comp_time(self) -> float:
         """
@@ -448,8 +446,8 @@ class OlavesRobot(sr.Robot):
         left: float,
         right: float,
         max_std: float = 3,
-        center: float = 0.45,
-        min_power: float = 0.15,
+        center: float = 2.0,
+        min_power: float = 0.10,
     ) -> tuple[float, float]:
         """
         Scales the two motor power values to ensure balanced and stable movement.
@@ -491,11 +489,11 @@ class OlavesRobot(sr.Robot):
             left = mu + scale_factor * (left - mu)
             right = mu + scale_factor * (right - mu)
 
-        # Shift mean to center
-        new_mu = (left + right) / 2.0
-        shift = center - new_mu
-        left += shift
-        right += shift
+        # # Shift mean to center
+        # new_mu = (left + right) / 2.0
+        # shift = center - new_mu
+        # left += shift
+        # right += shift
 
         # Apply minimum power threshold
         left, right = self._apply_min_power(left, right, min_power)
@@ -634,34 +632,35 @@ class OlavesRobot(sr.Robot):
         """
         Picks up and holds the box.
 
+        Assumes that the box is directly ahead of the robot.
+
         This method ensures the robot returns to its initial starting point and engages the servo to pick up the box.
         It activates the power board to secure the box and logs the action.
 
         Raises:
             RuntimeError: If the servo or power board fails to engage.
         """
+        logger.info(f"[pick_hold_box]: Picking up box.")
         try:
-            # Ensure the robot is at the initial starting point
-            self.servo_board.servos["SERVO"].position = -1
-            logger.info("Servo positioned to pick up the box.")
+            # Sets the lifter to the lowest position
+            self.servo_board.servos[0].position = -1
 
-            markers = self.camera.see()
-            target_id = 123  # Example marker ID to look for
-            for marker in markers:
-                if marker.id == target_id:
-                    marker_orientation = marker.orientation.yaw
-                    logger.debug(f"Marker orientation yaw: {marker_orientation}")
+            logger.debug("Servo positioned to pick up the box.")
 
-            distance_m = self.arduino.ultrasound_measure(2, 3) * 1e-3
-            logger.debug(f"Measured distance: {distance_m} meters.")
+            distance = self.arduino.ultrasound_measure(2, 3) * 1e-3
+            logger.debug(f"Measured distance: {distance} meters.")
 
-            if distance_m == 0:
-                self.power_board.outputs["OUT_H0"].power_on()
-                self.sleep(3)
-                logger.info("Box secured by activating power board.")
+            # Activates vacuum pump
+            self.power_board.outputs[OUT_H0].is_enabled = True
+
+            # Raises lifter to highest position
+            self.servo_board.servos[0].position = 1
         except Exception as e:
             logger.error(f"Failed to pick up and hold the box: {e}")
             raise RuntimeError("Box pickup failed.") from e
+
+    def release_box(self):
+        self.power_board.outputs[OUT_H0].is_enabled = False
 
     def move_to_marker(self, marker_id: int) -> None:
         """
@@ -670,19 +669,19 @@ class OlavesRobot(sr.Robot):
         Parameters:
             marker_id (int): The ID of the target marker.
         """
-        logger.info(f"Moving to Marker: {marker_id}")
+        # logger.info(f"Moving to Marker: {marker_id}")
 
-        DIST_TOLERANCE = 0.2  # meters
+        DIST_TOLERANCE = 0.1  # meters
         ANGLE_TOLERANCE = 0.1  # radians
-        DIST_TO_TIME = 0.5  # Base duration for movement
+        DIST_TO_TIME = 0.05  # Base duration for movement
 
         markers = [m for m in self.camera.see() if m.id == marker_id]
         if not markers:
-            logger.error(f"Marker {marker_id} not seen initially.")
+            # logger.error(f"Marker {marker_id} not seen initially.")
             # TODO: Add some handling logic for when a marker can't be seen
             return
 
-        marker = markers[0]
+        marker = sorted(markers, key=lambda x: x.position.distance)[0]
         init_dist = marker.position.distance / 1000.0  # Convert mm to meters
 
         dist_error = init_dist
@@ -695,20 +694,23 @@ class OlavesRobot(sr.Robot):
         # Initialise PID controllers
         # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
-            sp=0.0, p=0.05, i=0.01, d=0.0, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
 
         # Angle PID: P and D for responsive turning with damping
         angle_pid = PIDController(
-            sp=0.0, p=0.15, i=0.01, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.4, i=0.1, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
 
-        while dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE:
+        iterations = 0
+        while (
+            dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE
+        ) and iterations != 1000:
             # Calculate PID corrections
             dist_correction = -dist_pid.getCorrection(dist_error)
             angle_correction = angle_pid.getCorrection(angle_error)
 
-            logger.debug(
+            logger.info(
                 f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
             )
 
@@ -718,7 +720,7 @@ class OlavesRobot(sr.Robot):
 
             # Apply scaling with minimum power
             left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.15
+                left_power, right_power, min_power=0.05
             )
 
             logger.debug(
@@ -728,7 +730,7 @@ class OlavesRobot(sr.Robot):
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
             time_step = min(
-                max((dist_error / init_dist) * DIST_TO_TIME, 0.5 * DIST_TO_TIME),
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
                 DIST_TO_TIME,
             )
 
@@ -740,21 +742,76 @@ class OlavesRobot(sr.Robot):
             if markers:
                 marker = markers[0]
             else:
-                logger.error(f"Marker {marker_id} lost. Exiting movement.")
+                logger.error(f"Marker {marker_id} lost.")
                 self.power((0.0, 0.0), 0.0)
-                return
+                if self.arduino.ultrasound_measure(2, 3) < DIST_TOLERANCE:
+                    logger.info(f"Moving to marker distance minimisation")
+                    self._move_to_marker_finalisation()
+                else:
+                    logger.error("Marker not in close vicinity. Exiting movement")
 
             # Update errors
             dist_error = marker.position.distance / 1000.0
             angle_error = marker.position.horizontal_angle
 
-            logger.debug(
+            logger.info(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
             )
+
+            iterations += 1
 
         # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
         logger.info("Marker Reached")
+
+    def _move_to_marker_finalisation(self) -> None:
+        DIST_TOLERANCE = 0.1  # meters
+        DIST_TO_TIME = 0.01  # Base duration for movement
+
+        init_dist = (
+            self.arduino.ultrasound_measure(2, 3) / 1000.0
+        )  # Convert mm to meters
+
+        dist_error = init_dist
+
+        logger.debug(f"Initial Distance Error: {dist_error:.3f} m")
+
+        # Initialise PID controllers
+        # Distance PID: Only P and I to prevent aggressive changes
+        dist_pid = PIDController(
+            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        iterations = 0
+        while dist_error > DIST_TOLERANCE and iterations != 100:
+            # Calculate PID corrections
+            dist_correction = -dist_pid.getCorrection(dist_error)
+
+            logger.info(f"Distance Correction: {dist_correction:.3f}")
+
+            # Convert corrections into left/right motor power
+            left_power = right_power = dist_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.05, center=0.1
+            )
+
+            logger.debug(
+                f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+            )
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
+                DIST_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+        logger.info("Marker in position. Exiting Movement")
 
     def move_pos(self, target_position: Tuple[float, float]) -> None:
         """
@@ -794,15 +851,19 @@ class OlavesRobot(sr.Robot):
         # Initialise PID controllers
         # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
-            sp=0.0, p=0.05, i=0.01, d=0.0, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
 
         # Angle PID: P and D for responsive turning with damping
         angle_pid = PIDController(
-            sp=0.0, p=0.15, i=0.01, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.4, i=0.1, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
 
-        while dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE:
+        iterations = 0
+
+        while (
+            dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE
+        ) and iterations != 1000:
             # Calculate PID corrections
             dist_correction = -dist_pid.getCorrection(dist_error)
             angle_correction = angle_pid.getCorrection(angle_error)
@@ -847,6 +908,8 @@ class OlavesRobot(sr.Robot):
             logger.debug(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
             )
+
+            iterations += 1
 
         # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
