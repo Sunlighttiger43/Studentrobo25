@@ -45,7 +45,7 @@ class MainLoop(State):
         """
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
-        boxes_left = 6 - self._get_number_of_pallets
+        boxes_left = 6 - self._get_number_of_pallets()
         
         if elapsed_time == 150:
             intensity = 3
@@ -60,7 +60,7 @@ class MainLoop(State):
         """            
 
          # EXAMPLE INTENSITY CALCULATION
-        # TODO: Factor in number of pallets into the calculation
+        # TODO: Factor in number of pallets into the calculation - DONE by Pragathi, Dev, Kushal
         logger.debug(f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})")
         return intensity
     
@@ -79,9 +79,9 @@ class MainLoop(State):
         # TODO: Implement this function to return a meaningful number to be used in intensity calculations
         # Example Implementation:
         # detected_pallets = self.r.detect_pallets() # TODO: Implement detect_pallets() in olaves_robot
-        detected_pallets = self.r.detect_pallets()[0]
-        pallet_count = len(detected_pallets)
-        logger.debug(f"Number of pallets detected: {pallet_count}")
+        detected_pallets_highrises = self.r.detect_pallets()[0]
+        pallet_count = detected_pallets_highrises
+        logger.debug(f"Number of high rise pallets detected: {pallet_count}")
         return pallet_count
     
     def run(self) -> Optional[State]:
