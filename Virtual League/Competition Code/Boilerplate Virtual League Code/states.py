@@ -191,6 +191,49 @@ class Knocking(State):
         self.knocking_start_time = robot.get_comp_time()
 
     # TODO: Actually implementing the knocking state based off of the pseudocode below
+    def enemy_boxes(self):
+        '''
+        Here I am trying to identify which enemy boxes it can see which are on high rises
+        :return: list[enemy_boxes]
+        '''
+        print(f"Returning list of enemy markers")
+        enemy_markers = []
+        markers = self.r.camera.see()
+        for marker in markers():
+            type_of_marker = OlavesRobot.get_marker_type(marker)
+            if type_of_marker is None and marker.orientation.pitch > 0:
+                enemy_markers.append(marker)
+
+        # So that we are not perpetually in the knocking state if we can't see any boxes to knock
+        if not enemy_markers:
+            return None
+
+        return enemy_markers
+
+    def enemy_target(self):
+        '''
+        The actual judgement on which box we are knocking over (ie targeting) - simplest thing being implemented is whichever is closest
+        :return: marker_id of box to be knocked over
+        '''
+        enemy_markers = self.enemy_boxes()
+        print(f"Returning which box to knock over")
+        shortest_distance = enemy_markers[0].position.distance
+        marker = enemy_markers[0]
+        # Simple method to find the shortest distance
+        for i in range(len(enemy_markers)):
+            distance = enemy_markers[i].position.distance
+            if shortest_distance > distance:
+                shortest_distance = enemy_markers[i].position.distance
+                marker = enemy_markers[i]
+
+        return marker
+
+    def knocking_over(self):
+        '''
+        actually knocks over box with given marker_id input
+        :return: If the knocking of the boxes was successful
+        '''
+        pass
 
 
 def main() -> None:
