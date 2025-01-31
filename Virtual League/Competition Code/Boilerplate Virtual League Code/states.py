@@ -243,6 +243,10 @@ class Knocking(State):
         actually knocks over box with given marker_id input
         :return: If the knocking of the boxes was successful
         """
+        enemy_marker=self.enemy_target()
+        marker_pos=self.get_marker_pos(enemy_marker)
+        self.move_to_marker(enemy_marker)
+        self._move(0.8)
         pass
 
 
