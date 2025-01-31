@@ -307,7 +307,7 @@ class OlavesRobot(sr.Robot):
         # y = ...  # Calculate y-coordinate
         # return (x, y)
         markers = self.camera.see()
-        #Just so that we are not left with unassigned variable names that might pull up an error in the program.
+        # Just so that we are not left with unassigned variable names that might pull up an error in the program.
         markerOrientation = 0
         markerDistance = 0
         for marker in markers:
@@ -315,12 +315,11 @@ class OlavesRobot(sr.Robot):
                 markerOrientation = marker.orientation.yaw
                 MarkerDistance = marker.position.distance / 1000
 
-        #To check if the marker is actually visible or not
+        # To check if the marker is actually visible or not
         if markerOrientation == 0 or MarkerDistance == 0:
             raise ValueError(f"Marker with ID {marker_id} not found.")
 
-
-        #Retrieves the robot current position to estimate where the marker is relative to it
+        # Retrieves the robot current position to estimate where the marker is relative to it
         Robot_current_pos = (
             self.get_pos()
         )  # Here I am assuming that the angle is a bearing in radians
@@ -339,8 +338,8 @@ class OlavesRobot(sr.Robot):
         )
         y_vector = math.sqrt((MarkerDistance**2) - (x_vector**2))
         # Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
-        if (robot_theta > (1.5)*pi and robot_theta < 2*pi) or (
-            robot_theta > 0 and robot_theta < 0.5*pi
+        if (robot_theta > (1.5) * pi and robot_theta < 2 * pi) or (
+            robot_theta > 0 and robot_theta < 0.5 * pi
         ):
             if marker.orientation.yaw > 0:
                 x_coord = robot_x - x_vector

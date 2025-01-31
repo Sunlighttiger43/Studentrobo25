@@ -7,9 +7,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class State(ABC):
     def __init__(self, robot: OlavesRobot):
         self.r = robot
+
 
 class StateMachine:
     def __init__(self, initial_state: State):
@@ -46,24 +48,30 @@ class MainLoop(State):
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
         boxes_left = 6 - self._get_number_of_pallets()
-        
+
         if elapsed_time == 150:
             intensity = 3
-        elif boxes_left == 2 and elapsed_time >= 135 or boxes_left == 1 and elapsed_time >= 140 or boxes_left == 0:
+        elif (
+            (boxes_left == 2 and elapsed_time >= 135)
+            or (boxes_left == 1 and elapsed_time >= 140)
+            or (boxes_left == 0)
+        ):
             intensity = 2
-        elif boxes_left >= 2 :
+        elif boxes_left >= 2:
             intensity = 1
         """
         we remoddelled the intensity so that it will keep hunting until 2 boxes 
         it will switch to the knocking state if we have 15 seconds left with 2 boxes or 1 box left with 10 seconds or we have 0 boxes left
         if the time_elapsed is past the total round time, it will switch to sleep state
-        """            
+        """
 
-         # EXAMPLE INTENSITY CALCULATION
+        # EXAMPLE INTENSITY CALCULATION
         # TODO: Factor in number of pallets into the calculation - DONE by Pragathi, Dev, Kushal
-        logger.debug(f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})")
+        logger.debug(
+            f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})"
+        )
         return intensity
-    
+
     def _get_number_of_pallets(self) -> int:
         """
         Retrieves the current number of our pallets on highrises
@@ -83,7 +91,7 @@ class MainLoop(State):
         pallet_count = detected_pallets_highrises
         logger.debug(f"Number of high rise pallets detected: {pallet_count}")
         return pallet_count
-    
+
     def run(self) -> Optional[State]:
         """
         Executes the main loop logic to calculate intensity and determine the next state.
@@ -108,12 +116,13 @@ class MainLoop(State):
             logger.info("Intensity threshold reached. Terminating.")
             return None
 
+
 class Hunting(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
         self.hunting_start_time = self.r.get_comp_time()
-    
-    #Idea is to get marker distance as well as ID and make judgments based upon it
+
+    # Idea is to get marker distance as well as ID and make judgments based upon it
     def get_our_markers(self) -> List[Tuple[int, float]]:
         """
         Retrieves a list of own pallet markers.
@@ -125,7 +134,7 @@ class Hunting(State):
         our_markers = []
         for marker in markers:
             # TODO: Change the implementation to account for the fact that our robot could be in any of the 4 zones
-            if 100 <= marker.id <= 119:
+            if marker in self.get_our_markers():
                 our_markers.append((marker.id, marker.position.distance))
         logger.debug(f"Our markers: {our_markers}")
         return our_markers
@@ -146,6 +155,7 @@ class Hunting(State):
         if not our_markers:
             logger.error("No own markers detected for distance judgement.")
             raise ValueError("our_markers list is empty.")
+            # TODO: Add some way to deal with this issue
 
         sorted_markers = sorted(our_markers, key=lambda x: x[1])
         closest_marker_id = sorted_markers[0][0]
@@ -163,7 +173,7 @@ class Hunting(State):
         hunting_duration = current_time - self.hunting_start_time
         logger.debug(f"Hunting duration: {hunting_duration} seconds.")
         return hunting_duration
-    
+
     def run(self) -> Optional[State]:
         """
         Executes the hunting state to manage the robot's own pallets.
@@ -179,8 +189,8 @@ class Hunting(State):
             # TODO: Add logic to handle how the marker is dealt with once approached
         except ValueError:
             logger.warning("No own markers detected. Returning to MainLoop.")
-            # TODO: Add interrupt logic here, if no markers are detected maybe a counter should start, 
-            #       if the hunting state runs some number of times in a row with no markers found, then another state should be 
+            # TODO: Add interrupt logic here, if no markers are detected maybe a counter should start,
+            #       if the hunting state runs some number of times in a row with no markers found, then another state should be
             #       run instead
             return MainLoop(self.robot)
 
@@ -192,10 +202,10 @@ class Knocking(State):
 
     # TODO: Actually implementing the knocking state based off of the pseudocode below
     def enemy_boxes(self):
-        '''
+        """
         Here I am trying to identify which enemy boxes it can see which are on high rises
         :return: list[enemy_boxes]
-        '''
+        """
         print(f"Returning list of enemy markers")
         enemy_markers = []
         markers = self.r.camera.see()
@@ -211,10 +221,10 @@ class Knocking(State):
         return enemy_markers
 
     def enemy_target(self):
-        '''
+        """
         The actual judgement on which box we are knocking over (ie targeting) - simplest thing being implemented is whichever is closest
         :return: marker_id of box to be knocked over
-        '''
+        """
         enemy_markers = self.enemy_boxes()
         print(f"Returning which box to knock over")
         shortest_distance = enemy_markers[0].position.distance
@@ -229,10 +239,10 @@ class Knocking(State):
         return marker
 
     def knocking_over(self):
-        '''
+        """
         actually knocks over box with given marker_id input
         :return: If the knocking of the boxes was successful
-        '''
+        """
         pass
 
 
@@ -246,6 +256,7 @@ def main() -> None:
     logger.info("Robot initialised and starting state machine.")
     state_machine = StateMachine(MainLoop(robot))
     state_machine.run()
+
 
 '''SKELETON CODE (blueprint) FOR KNOCKING STATE
 

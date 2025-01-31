@@ -8,6 +8,8 @@
 - implement zone_pallets() to account for the fact our robot could be in any one of the 4 zones (COMPLETED: KIROLLOS)
 - Implement knocking_state() based off of the pseudocode in states.py (maybe Agastya can do this) (IN PROGRESS: )
 - Main program loop (IN PROGRESS: )
+- Deal with the issue of no markers, in the hunting state in _judgement_of_distances (IN PROGRESS: )
+    - Also need to implement how the hunting state is acted upon in run (IN PROGRESS: )
 
 # Bug Fixing and Logical Errors
 - get_marker_pos (IN PROGRESS: AARIT - DONE MAYBE???)
