@@ -283,6 +283,11 @@ class Knocking(State):
         self.robot._move(0.8)
         pass
 
+    def run(self) -> Optional[State]:
+        try:
+            self.knocking_over()
+        except ValueError:
+            return MainLoop(self.robot)
 
 def main() -> None:
     """
