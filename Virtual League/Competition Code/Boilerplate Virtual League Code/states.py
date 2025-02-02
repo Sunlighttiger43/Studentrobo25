@@ -209,9 +209,10 @@ class Knocking(State):
         print(f"Returning list of enemy markers")
         enemy_markers = []
         markers = self.r.camera.see()
+        #Finding which marker are enemy markers - will need to integrate this with competition mode
         for marker in markers():
             type_of_marker = OlavesRobot.get_marker_type(marker)
-            if type_of_marker is None and marker.orientation.pitch > 0:
+            if type_of_marker != "pallet0" and type_of_marker != "wall" and type_of_marker != "highrise" and marker.orientation.pitch > 0:
                 enemy_markers.append(marker)
 
         # So that we are not perpetually in the knocking state if we can't see any boxes to knock
