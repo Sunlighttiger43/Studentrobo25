@@ -2,6 +2,7 @@
 #olaves_robot.py
 
 import sr.robot3 as sr
+from typing import Optional, List, Tuple
 from math import pi, sin, cos, atan2, sqrt, tan, floor, degrees, atan
 import numpy as np
 from time import time
