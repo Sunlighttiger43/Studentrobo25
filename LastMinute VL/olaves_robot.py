@@ -5,7 +5,6 @@ import sr.robot3 as sr
 from typing import Optional, List, Tuple
 from math import pi, sin, cos, atan2, sqrt, tan, floor, degrees, atan
 import numpy as np
-from time import time
 from random import randint
 
 class OlavesRobot(sr.Robot):
@@ -13,7 +12,7 @@ class OlavesRobot(sr.Robot):
         super().__init__()
         self.myPallets = set(range(100 + (20*self.zone), 120 + (20*self.zone)))
         self.enemyPallets = set(range(100,180)).difference(self.myPallets)
-        self.init_time: float = time()
+        self.init_time: float = self.time()
         #motor board: self.motor_board
         #servo board: self.servo_board
         #power board: self.power_board
@@ -29,7 +28,7 @@ class OlavesRobot(sr.Robot):
         Returns:
             float: Elapsed time in seconds.
         """
-        elapsed_time = time() - self.init_time
+        elapsed_time = self.time() - self.init_time
         print(f"Computed elapsed time: {elapsed_time} seconds.")
         return elapsed_time
 

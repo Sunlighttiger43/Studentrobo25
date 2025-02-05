@@ -2,7 +2,6 @@
 
 import math
 from math import pi, sin, cos, atan2, sqrt, tan, floor, degrees, atan
-from time import time
 import logging
 from typing import List, Tuple, Optional, Union, Callable
 from sympy import Matrix,linsolve,symbols
@@ -18,7 +17,7 @@ class OlavesRobot(sr.Robot):
     def __init__(self):
         super().__init__()
         logger.info("Initialising OlavesRobot")
-        self.init_time: float = time()
+        self.init_time: float = self.time()
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
         self._last_time_updated: float = 0  # seconds
         self.ticks = [0, 0]
@@ -35,7 +34,7 @@ class OlavesRobot(sr.Robot):
         Returns:
             float: Elapsed time in seconds.
         """
-        elapsed_time = time() - self.init_time
+        elapsed_time = self.time() - self.init_time
         logger.debug(f"Computed elapsed time: {elapsed_time} seconds.")
         return elapsed_time
 
