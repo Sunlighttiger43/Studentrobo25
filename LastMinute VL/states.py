@@ -53,8 +53,9 @@ class MainLoop(State):
         intensity = self.calculate_intensity()
         print(f"Current Intensity: {intensity}")
 
-        #return Hunting(self.r)
-        return None
+        return Hunting(self.r)
+    
+
 
 class Hunting(State):
     def __init__(self, robot: OlavesRobot):
@@ -67,7 +68,8 @@ class Hunting(State):
         Returns:
             Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
         """
-        closestPallet = self.robot.get_closest_pallet()
+        closestPallet = self.get_closest_pallet()
         print(f"Closest marker ID: {closestPallet.id}")
+        self.sleep(2)
 
 
