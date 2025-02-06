@@ -313,10 +313,10 @@ class OlavesRobot(sr.Robot):
         for marker in markers:
             if marker_id == marker.id:
                 markerOrientation = marker.orientation.yaw
-                MarkerDistance = marker.position.distance / 1000
+                markerDistance = marker.position.distance / 1000
 
         # To check if the marker is actually visible or not
-        if markerOrientation == 0 or MarkerDistance == 0:
+        if markerOrientation == 0 or markerDistance == 0:
             raise ValueError(f"Marker with ID {marker_id} not found.")
 
         # Retrieves the robot current position to estimate where the marker is relative to it
@@ -331,12 +331,12 @@ class OlavesRobot(sr.Robot):
         # Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
         x_vector = (
             math.sqrt(
-                2 * MarkerDistance**2
-                - (MarkerDistance**2) * math.cos(markerOrientation)
+                2 * markerDistance**2
+                - (markerDistance**2) * math.cos(markerOrientation)
             )
             / 2
         )
-        y_vector = math.sqrt((MarkerDistance**2) - (x_vector**2))
+        y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
         # Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
         if (robot_theta > (1.5) * pi and robot_theta < 2 * pi) or (
             robot_theta > 0 and robot_theta < 0.5 * pi
