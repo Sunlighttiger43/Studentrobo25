@@ -1,3 +1,6 @@
+**REDUNDANT**
+
+
 # General Code Implements
 - Implement Positioning System Logic to boilerplate code
     - encoder_pos implementation (COMPLETED: KIROLLOS)
