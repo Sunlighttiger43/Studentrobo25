@@ -121,6 +121,7 @@ class Hunting(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
         self.hunting_start_time = self.r.get_comp_time()
+        self.boxes_retrieved = []
 
     # Idea is to get marker distance as well as ID and make judgments based upon it
     def get_our_markers(self) -> List[Tuple[int, float]]:
@@ -137,7 +138,11 @@ class Hunting(State):
             if marker in self.get_our_markers():
                 our_markers.append((marker.id, marker.position.distance))
         logger.debug(f"Our markers: {our_markers}")
-        return our_markers
+        if our_markers == []:
+            self.robot._turn(3.14/2)
+            return self.get_our_markers()
+        else:
+            return our_markers
 
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
@@ -152,15 +157,39 @@ class Hunting(State):
         Raises:
             ValueError: If 'our_markers' is empty.
         """
+        pass
+
+    def which_marker(self, our_markers: List[Tuple[int, float]]):
+        """
+        Determines the closest marker from the list of own markers, if we haven't already got it
+
+        Parameters:
+            our_markers (List[Tuple[int, float]]): A list of (ID, distance) pairs.
+
+        Returns:
+            int: The ID of the closest marker.
+
+        Raises:
+            ValueError: If 'our_markers' is empty.
+        """
         if not our_markers:
             logger.error("No own markers detected for distance judgement.")
             raise ValueError("our_markers list is empty.")
-            # TODO: Add some way to deal with this issue
+            # TODO: Add some way to deal with this issue - should be resolved in get_our_markers
 
         sorted_markers = sorted(our_markers, key=lambda x: x[1])
         closest_marker_id = sorted_markers[0][0]
-        logger.debug(f"Closest marker ID: {closest_marker_id}")
-        return closest_marker_id
+        logger.debug(f"Closest not already obtained marker ID: {closest_marker_id}")
+        if closest_marker_id not in self.boxes_retrieved:
+            self.boxes_retrieved.append(closest_marker_id)
+            return closest_marker_id
+        else:
+            try:
+                our_markers.remove(our_markers[0])
+                return self.which_marker(our_markers)
+            except:
+                self.boxes_retrieved.clear()
+                return ValueError
 
     def get_hunting_time(self) -> float:
         """
@@ -183,15 +212,19 @@ class Hunting(State):
         """
         try:
             our_markers = self.get_our_markers()
-            closest_marker_id = self.judgement_of_distances(our_markers)
+            closest_marker_id = self.which_marker(our_markers)
             logger.info(f"Moving to closest marker ID: {closest_marker_id}")
             self.robot.move_to_marker(closest_marker_id)
-            # TODO: Add logic to handle how the marker is dealt with once approached
+            self.robot.pick_hold_box()
+            #TODO: need logic on which area to drop the box
+            self.robot.move_pos([0, 0])
+            self.robot.drop_box()
         except ValueError:
             logger.warning("No own markers detected. Returning to MainLoop.")
             # TODO: Add interrupt logic here, if no markers are detected maybe a counter should start,
             #       if the hunting state runs some number of times in a row with no markers found, then another state should be
             #       run instead
+            #I think we are fine with keeping track of what boxes are being picked up
             return MainLoop(self.robot)
 
 
@@ -209,9 +242,10 @@ class Knocking(State):
         print(f"Returning list of enemy markers")
         enemy_markers = []
         markers = self.r.camera.see()
+        #Finding which marker are enemy markers - will need to integrate this with competition mode with the robot attribute Robot.zone
         for marker in markers():
             type_of_marker = OlavesRobot.get_marker_type(marker)
-            if type_of_marker is None and marker.orientation.pitch > 0:
+            if (type_of_marker != "pallet" + str(self.r.zone)) and type_of_marker != "wall" and type_of_marker != "highrise" and marker.orientation.pitch < 0:
                 enemy_markers.append(marker)
 
         # So that we are not perpetually in the knocking state if we can't see any boxes to knock
@@ -244,11 +278,16 @@ class Knocking(State):
         :return: If the knocking of the boxes was successful
         """
         enemy_marker=self.enemy_target()
-        marker_pos=self.get_marker_pos(enemy_marker)
-        self.move_to_marker(enemy_marker)
-        self._move(0.8)
+        marker_pos=self.robot.get_marker_pos(enemy_marker)
+        self.robot.move_to_marker(enemy_marker)
+        self.robot._move(0.8)
         pass
 
+    def run(self) -> Optional[State]:
+        try:
+            self.knocking_over()
+        except ValueError:
+            return MainLoop(self.robot)
 
 def main() -> None:
     """

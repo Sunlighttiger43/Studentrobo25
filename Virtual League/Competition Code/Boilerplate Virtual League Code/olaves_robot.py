@@ -313,10 +313,10 @@ class OlavesRobot(sr.Robot):
         for marker in markers:
             if marker_id == marker.id:
                 markerOrientation = marker.orientation.yaw
-                MarkerDistance = marker.position.distance / 1000
+                markerDistance = marker.position.distance / 1000
 
         # To check if the marker is actually visible or not
-        if markerOrientation == 0 or MarkerDistance == 0:
+        if markerOrientation == 0 or markerDistance == 0:
             raise ValueError(f"Marker with ID {marker_id} not found.")
 
         # Retrieves the robot current position to estimate where the marker is relative to it
@@ -331,12 +331,12 @@ class OlavesRobot(sr.Robot):
         # Idea here is to utilise the cosine rule by making an isosceles triangle with the 'A' angle being marker orientation
         x_vector = (
             math.sqrt(
-                2 * MarkerDistance**2
-                - (MarkerDistance**2) * math.cos(markerOrientation)
+                2 * markerDistance**2
+                - (markerDistance**2) * math.cos(markerOrientation)
             )
             / 2
         )
-        y_vector = math.sqrt((MarkerDistance**2) - (x_vector**2))
+        y_vector = math.sqrt((markerDistance**2) - (x_vector**2))
         # Checks whether the actual marker is behind the robot or not, by looking at the orientation of the robot and check what the orientation of the marker is to add either negative x vector or positive x vector
         if (robot_theta > (1.5) * pi and robot_theta < 2 * pi) or (
             robot_theta > 0 and robot_theta < 0.5 * pi
@@ -426,7 +426,7 @@ class OlavesRobot(sr.Robot):
         self._prev_power = corrected_wheels
         self.motor_board.motors[1].power = self._clamp(corrected_wheels[1])
         self.motor_board.motors[0].power = self._clamp(corrected_wheels[0])
-        logger.info(
+        logger.debug(
             f"Setting motor powers to {self._prev_power} for {duration} seconds."
         )
         self.sleep(duration)
@@ -563,7 +563,7 @@ class OlavesRobot(sr.Robot):
         Raises:
             NotImplementedError: Indicates that wheel correction is not implemented for the virtual league.
         """
-        logger.warning(
+        logger.debug(
             "_wonky_wheels_correction is not implemented for the virtual league."
         )
         return wheels  # Assuming no correction needed in simulation
@@ -667,7 +667,7 @@ class OlavesRobot(sr.Robot):
             logger.debug(f"Measured distance: {distance} meters.")
 
             # Activates vacuum pump
-            self.power_board.outputs[OUT_H0].is_enabled = True
+            self.power_board.outputs["OUT_H0"].is_enabled = True
 
             # Raises lifter to highest position
             self.servo_board.servos[0].position = 1
@@ -676,7 +676,7 @@ class OlavesRobot(sr.Robot):
             raise RuntimeError("Box pickup failed.") from e
 
     def release_box(self):
-        self.power_board.outputs[OUT_H0].is_enabled = False
+        self.power_board.outputs["OUT_H0"].is_enabled = False
 
     def move_to_marker(self, marker_id: int) -> None:
         """
@@ -710,23 +710,26 @@ class OlavesRobot(sr.Robot):
         # Initialise PID controllers
         # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
-            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.15, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
 
         # Angle PID: P and D for responsive turning with damping
         angle_pid = PIDController(
-            sp=0.0, p=0.4, i=0.1, d=0.3, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
 
         iterations = 0
+        counter = 0
         while (
-            dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE
-        ) and iterations != 1000:
+            (dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE)
+            and iterations != 1000
+            and counter < 5
+        ):
             # Calculate PID corrections
             dist_correction = -dist_pid.getCorrection(dist_error)
             angle_correction = angle_pid.getCorrection(angle_error)
 
-            logger.info(
+            logger.debug(
                 f"Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
             )
 
@@ -757,20 +760,22 @@ class OlavesRobot(sr.Robot):
             markers = [m for m in self.camera.see() if m.id == marker_id]
             if markers:
                 marker = markers[0]
+                counter = 0
             else:
                 logger.error(f"Marker {marker_id} lost.")
                 self.power((0.0, 0.0), 0.0)
+                counter += 1
                 if self.arduino.ultrasound_measure(2, 3) < DIST_TOLERANCE:
                     logger.info(f"Moving to marker distance minimisation")
                     self._move_to_marker_finalisation()
                 else:
-                    logger.error("Marker not in close vicinity. Exiting movement")
+                    logger.error("Marker not in close vicinity.")
 
             # Update errors
             dist_error = marker.position.distance / 1000.0
             angle_error = marker.position.horizontal_angle
 
-            logger.info(
+            logger.debug(
                 f"Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
             )
 

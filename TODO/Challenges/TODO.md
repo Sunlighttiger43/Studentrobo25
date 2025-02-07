@@ -1,3 +1,4 @@
 # Movement Challenge
-- Everything's implemented so it just needs to be tested
-- Probably not a priority until after the virtual league deadline
+- Need to test the positioning logic of the robot
+- Need to draw out a triangle in room 1
+- Get the robot to trace the triangle
