@@ -6,12 +6,14 @@ from typing import Optional, List, Tuple
 from math import pi, sin, cos, atan2, sqrt, tan, floor, degrees, atan
 import numpy as np
 from random import randint
+from pid import PIDController
 
 class OlavesRobot(sr.Robot):
     def __init__(self):
         super().__init__()
         self.myPallets = set(range(100 + (20*self.zone), 120 + (20*self.zone)))
         self.enemyPallets = set(range(100,180)).difference(self.myPallets)
+        self.hiRises = set(range(195,200))
         self.init_time: float = self.time()
         #motor board: self.motor_board
         #servo board: self.servo_board
@@ -138,18 +140,33 @@ class OlavesRobot(sr.Robot):
     
 
     def get_closest_pallet(self, enemy = False) -> object:
-        markers = self.camera.see()
-        shortestDistance = 10e9
-        closestPallet = None
-        thePallets = self.myPallets
-        if enemy == True:
-            thePallets = self.enemyPallets
-        for marker in markers:
-            if marker.id in thePallets and marker.distance < shortestDistance:
-                closestPallet = marker
-                shortestDistance = marker.distance
-        return closestPallet
+        try:
+            markers = self.camera.see()
+            shortestDistance = 10e9
+            closestPallet = None
+            thePallets = self.myPallets
+            if enemy == True:
+                thePallets = self.enemyPallets
+            for marker in markers:
+                if marker.id in thePallets and marker.distance < shortestDistance:
+                    closestPallet = marker
+                    shortestDistance = marker.distance
+            return closestPallet
+        except:
+            return None
     
+    def get_closest_hirise(self) -> object:
+        try:
+            markers = self.camera.see()
+            shortestDistance = 10e9
+            closestHirise = None
+            for marker in markers:
+                if marker.id in self.hiRises and marker.distance < shortestDistance:
+                    closestHirise = marker
+                    shortestDistance = marker.distance
+            return closestHirise
+        except:
+            return None
 
     def reverse_and_reset(self) -> None:
         self.move(-0.4)
@@ -173,6 +190,136 @@ class OlavesRobot(sr.Robot):
         self.power_board.outputs[OUT_H0].is_enabled = False
         self.sleep(0.25)
 
+    def move_to_marker(self, marker_id: int) -> None:
+        """
+        Moves the robot to a specified marker using PID controllers.
 
-    def calculate_heat_level(self, pitch, distance) -> float:
-        pass
+        Parameters:
+            marker_id (int): The ID of the target marker.
+        """
+        # logger.info(f"Moving to Marker: {marker_id}")
+
+        DIST_TOLERANCE = 0.1  # meters
+        ANGLE_TOLERANCE = 0.1  # radians
+        DIST_TO_TIME = 0.05  # Base duration for movement
+
+        markers = [m for m in self.camera.see() if m.id == marker_id]
+        if not markers:
+            # logger.error(f"Marker {marker_id} not seen initially.")
+            # TODO: Add some handling logic for when a marker can't be seen
+            return
+
+        marker = sorted(markers, key=lambda x: x.position.distance)[0]
+        init_dist = marker.position.distance / 1000.0  # Convert mm to meters
+
+        dist_error = init_dist
+        angle_error = marker.position.horizontal_angle
+
+        # Initialise PID controllers
+        # Distance PID: Only P and I to prevent aggressive changes
+        dist_pid = PIDController(
+            sp=0.0, p=0.15, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        # Angle PID: P and D for responsive turning with damping
+        angle_pid = PIDController(
+            sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        iterations = 0
+        counter = 0
+        while (
+            (dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE)
+            and iterations != 1000
+            and counter < 5
+        ):
+            # Calculate PID corrections
+            dist_correction = -dist_pid.getCorrection(dist_error)
+            angle_correction = angle_pid.getCorrection(angle_error)
+
+            # Convert corrections into left/right motor power
+            left_power = dist_correction - angle_correction
+            right_power = dist_correction + angle_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.05
+            )
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
+                DIST_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+            # Update marker information
+            markers = [m for m in self.camera.see() if m.id == marker_id]
+            if markers:
+                marker = markers[0]
+                counter = 0
+            else:
+                self.power((0.0, 0.0), 0.0)
+                counter += 1
+                if self.arduino.ultrasound_measure(2, 3) < DIST_TOLERANCE:
+                    self._move_to_marker_finalisation()
+                else:
+                    pass
+
+            # Update errors
+            dist_error = marker.position.distance / 1000.0
+            angle_error = marker.position.horizontal_angle
+
+            iterations += 1
+
+        # Stop the robot once target is reached
+        self.power((0.0, 0.0), 0.0)
+
+    def _move_to_marker_finalisation(self) -> None:
+        DIST_TOLERANCE = 0.1  # meters
+        DIST_TO_TIME = 0.01  # Base duration for movement
+
+        init_dist = (
+            self.arduino.ultrasound_measure(2, 3) / 1000.0
+        )  # Convert mm to meters
+
+        dist_error = init_dist
+
+        # Initialise PID controllers
+        # Distance PID: Only P and I to prevent aggressive changes
+        dist_pid = PIDController(
+            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+        )
+
+        iterations = 0
+        while dist_error > DIST_TOLERANCE and iterations != 100:
+            # Calculate PID corrections
+            dist_correction = -dist_pid.getCorrection(dist_error)
+
+            # Convert corrections into left/right motor power
+            left_power = right_power = dist_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.05, center=0.1
+            )
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
+                DIST_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+
+    def checkVacuumEnabled(self):
+        try:
+            return self.power_board.outputs[OUT_H0].is_enabled
+        except:
+            return False

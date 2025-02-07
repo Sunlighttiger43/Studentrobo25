@@ -39,9 +39,6 @@ class MainLoop(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
 
-    def calculate_intensity(self):
-        return None
-
     def run(self) -> Optional[State]:
         """
         Executes the main loop logic to calculate intensity and determine the next state.
@@ -50,11 +47,13 @@ class MainLoop(State):
             Optional[State]: The next state based on intensity, or None to terminate.
         """
 
-        intensity = self.calculate_intensity()
-        print(f"Current Intensity: {intensity}")
-
+        # timeElapsed = self.get_comp_time()
+        # if timeElapsed < 110:
+        #     return Hunting(self.r)
+        # else:
+        #     return Knocking(self.r)
+        
         return Hunting(self.r)
-    
 
 
 class Hunting(State):
@@ -68,8 +67,25 @@ class Hunting(State):
         Returns:
             Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
         """
-        closestPallet = self.get_closest_pallet()
-        print(f"Closest marker ID: {closestPallet.id}")
-        self.sleep(2)
-
-
+        try:
+            if self.checkVacuumEnabled() == False:
+                closestPallet = self.get_closest_pallet()
+                if closestPallet == None:
+                    self.reverse_and_reset()
+                    return MainLoop(self.r)
+                print(f"Closest marker ID: {closestPallet.id}")
+                self.move_to_marker(closestPallet.id)
+                self.sleep(0.5)
+                self.pick_up_box()
+            closestHirise = self.get_closest_hirise()
+            if closestHirise == None:
+                self.reverse_and_reset()
+                return MainLoop(self.r)
+            self.move_to_marker(closestHirise.id)
+            self.sleep(0.5)
+            self.drop_box()
+            self.reverse_and_reset()
+            return MainLoop(self.r)
+        except:
+            self.reverse_and_reset()
+            return MainLoop(self.r)
