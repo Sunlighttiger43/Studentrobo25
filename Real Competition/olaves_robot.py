@@ -264,10 +264,82 @@ class OlavesRobot(sr.Robot):
         Raises:
             NotImplementedError: This method is intentionally unimplemented for the virtual league.
         """
-        logger.warning("_turn_to_marker is not implemented for the virtual league.")
-        raise NotImplementedError(
-            "_turn_to_marker is not needed for the virtual league."
+        logger.info(f"[_turn_to_marker] | Turning to marker with id {target_marker_id}")
+
+        ANGLE_TOLERANCE = 0.05
+        ANGLE_TO_TIME = 0.05
+
+        markers = [m for m in self.camera.see() if m.id == target_marker_id]
+        if not markers:
+            logger.error(
+                f"[move_to_marker] | Marker {target_marker_id} not seen initially."
+            )
+            # TODO: Add some handling logic for when a marker can't be seen
+            return
+
+        marker = sorted(markers, key=lambda x: x.position.distance)[0]
+        angle_error = init_angle = marker.position.horizontal_angle
+
+        logger.debug(f"[move_to_marker] | Initial Angle Error: {angle_error:.3f} rad")
+
+        # Angle PID:
+        angle_pid = PIDController(
+            sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
+        # TODO: Tune PIDController for real robot
+
+        iterations = 0
+        counter = 0
+        while abs(angle_error) > ANGLE_TOLERANCE and iterations != 1000 and counter < 5:
+            # Calculate PID corrections
+            angle_correction = angle_pid.getCorrection(angle_error)
+
+            logger.debug(f"[move_to_marker] | Angle Correction: {angle_correction:.3f}")
+
+            # Convert corrections into left/right motor power
+            left_power = -angle_correction
+            right_power = +angle_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.05, center=0
+            )
+
+            logger.debug(
+                f"[move_to_marker] | Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+            )
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((angle_error / init_angle) * ANGLE_TO_TIME, 0.1 * ANGLE_TO_TIME),
+                ANGLE_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+            # Update marker information
+            markers = [m for m in self.camera.see() if m.id == target_marker_id]
+            if markers:
+                marker = markers[0]
+                counter = 0
+            else:
+                logger.error(f"[move_to_marker] | Marker {target_marker_id} lost.")
+                self.power((0.0, 0.0), 0.0)
+                counter += 1
+
+            angle_error = marker.position.horizontal_angle
+
+            logger.debug(
+                f"[move_to_marker] | Updated Angle Error: {angle_error:.3f} rad"
+            )
+
+            iterations += 1
+
+        # Stop the robot once target is reached
+        self.power((0.0, 0.0), 0.0)
+        logger.debug("[move_to_marker] | Marker Reached")
 
     def _align_with_marker(self, marker, target_marker_pos: np.ndarray) -> None:
         """
@@ -691,15 +763,14 @@ class OlavesRobot(sr.Robot):
         )
 
         # Initialise PID controllers
-        # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
             sp=0.0, p=0.15, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
 
-        # Angle PID: P and D for responsive turning with damping
         angle_pid = PIDController(
             sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
+        # TODO: Tune PIDContollers for the real competition
 
         iterations = 0
         counter = 0
@@ -797,6 +868,7 @@ class OlavesRobot(sr.Robot):
         dist_pid = PIDController(
             sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
+        # TODO: Tune PIDControllers for the physical robot
 
         iterations = 0
         while dist_error > DIST_TOLERANCE and iterations != 100:
@@ -869,15 +941,14 @@ class OlavesRobot(sr.Robot):
         )
 
         # Initialise PID controllers
-        # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
             sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
         )
 
-        # Angle PID: P and D for responsive turning with damping
         angle_pid = PIDController(
             sp=0.0, p=0.4, i=0.1, d=0.3, integrator_min=-5.0, integrator_max=5.0
         )
+        # TODO: Tune PIDControllers for physical robot
 
         iterations = 0
 

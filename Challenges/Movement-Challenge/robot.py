@@ -2,6 +2,7 @@
 
 import logging
 from olaves_robot import OlavesRobot
+from movement_challenge import main
 
 r = OlavesRobot()
 
@@ -15,7 +16,9 @@ def configure_logging():
     """
     # Set the default logging level and format
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=[logging.StreamHandler(), logging.FileHandler("app.log")],
     )
 
 
@@ -27,7 +30,8 @@ def run_robot():
     """
 
     configure_logging()
-    # Call main from states
+    # Call main from movement_challenge
+    main()
 
 
 if __name__ == "__main__":
