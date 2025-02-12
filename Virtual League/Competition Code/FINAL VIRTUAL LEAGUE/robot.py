@@ -6,6 +6,7 @@ from olaves_robot import OlavesRobot
 
 r = OlavesRobot()
 
+
 def configure_logging():
     """
     Configures logging for the entire application.
@@ -26,7 +27,7 @@ def run_robot():
     This function configures logging and then starts the main state machine.
     """
 
-    print('Happy Birthday, Mr Savage!')
+    print("Happy Birthday, Mr Savage!")
     position = r.newPositioning()
     print(position)
     r.sleep(2)

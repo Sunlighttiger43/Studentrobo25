@@ -3,9 +3,20 @@
 from typing import Optional, List, Tuple
 from abc import ABC, abstractmethod
 from olaves_robot import OlavesRobot
+
 import logging
 
+# Creating a logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Creating handlers
+console = logging.StreamHandler().setLevel(logging.INFO)
+file = logging.FileHandler(filename="states.log").setLevel(logging.DEBUG)
+
+# Adding handlers to logger
+logger.addHandler(console)
+logger.addHandler(file)
 
 
 class State(ABC):
@@ -164,9 +175,10 @@ class Hunting(State):
             ValueError: If 'our_markers' is empty.
         """
         if not our_markers:
-            logger.error("No own markers detected for distance judgement.")
-            raise ValueError("our_markers list is empty.")
-            # TODO: Add some way to deal with this issue - should be resolved in get_our_markers
+            logger.warning(
+                "[Hunting.which_marker] | No own markers detected for distance judgement. Attempting fallback logic."
+            )
+            return None
 
         sorted_markers = sorted(our_markers, key=lambda x: x[1])
         closest_marker_id = sorted_markers[0][0]
@@ -201,22 +213,26 @@ class Hunting(State):
         Returns:
             Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
         """
-        try:
-            our_markers = self.get_our_markers()
-            closest_marker_id = self.which_marker(our_markers)
-            logger.info(f"Moving to closest marker ID: {closest_marker_id}")
-            self.robot.move_to_marker(closest_marker_id)
-            self.robot.pick_hold_box()
-            # TODO: need logic on which area to drop the box
-            self.robot.move_pos([0, 0])
-            self.robot.drop_box()
-        except ValueError:
-            logger.warning("No own markers detected. Returning to MainLoop.")
-            # TODO: Add interrupt logic here, if no markers are detected maybe a counter should start,
-            #       if the hunting state runs some number of times in a row with no markers found, then another state should be
-            #       run instead
-            # I think we are fine with keeping track of what boxes are being picked up
-            return MainLoop(self.robot)
+
+        our_markers = self.get_our_markers()
+        closest_marker_id = self.which_marker(our_markers)
+
+        if closest_marker_id == None:
+            logger.info(
+                f"[Hunting.run] | No marker detected, returning to mainloop as a fallback"
+            )
+            return MainLoop(self.r)
+            # TODO: Might be wise to add some fallback here, like turning and checking for
+            # markers on the spot for a full rotation before returning to main loop
+
+        logger.info(f"Moving to closest marker ID: {closest_marker_id}")
+        self.robot.move_to_marker(closest_marker_id)
+        self.robot.pick_hold_box()
+        # TODO: need logic on which area to drop the box
+        self.robot.move_pos([0, 0])
+        self.robot.drop_box()
+
+        return MainLoop(self.robot)
 
 
 class Knocking(State):

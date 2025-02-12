@@ -1,16 +1,30 @@
 # olaves_robot.py
 
-import math
 from math import pi, sin, cos, atan2, sqrt
 from time import time
-import logging
 from typing import List, Tuple, Optional, Union
+from pid import PIDController
 
 import numpy as np
 import sr.robot3 as sr
-from pid import PIDController
 
+import logging
+import json
+import os
+
+# Creating a logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Creating handlers
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+file = logging.FileHandler(filename="robot.log")
+file.setLevel(logging.DEBUG)
+
+# Adding handlers to logger
+logger.addHandler(console)
+logger.addHandler(file)
 
 
 class OlavesRobot(sr.Robot):
@@ -21,14 +35,48 @@ class OlavesRobot(sr.Robot):
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
         self._last_time_updated: float = 0  # seconds
         self.ticks = [0, 0]
-        self.servo_board.servos[0].position = 1
 
-        pallet_dict = {
+        self.pallet_dict = {
             0: list(i for i in range(100, 120)),
             1: list(i for i in range(120, 140)),
             2: list(i for i in range(140, 160)),
             3: list(i for i in range(160, 180)),
         }
+
+        # Might prove helpful to distinguish between physical robot and simulated robot
+        # for testing
+        self.is_physical_robot = True
+
+        # Setting servo to default position for simulated robot:
+        if not self.is_physical_robot:
+            self.servo_board.servos[0].position = 1
+
+        # We will load any external PID tunings here
+        # This allows for continuity between different testing runs
+        self.pid_tunings = self._load_pid_tunings_from_file()
+
+    def _load_pid_tunings_from_file(self) -> dict:
+        """
+        Loads PID tunings from a JSON file if it exists.
+        Returns a dictionary of PID configs dictionaries keyed by name.
+        """
+        filename = "pid_tunings.json"
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                try:
+                    data = json.load(f)
+                    logger.info("[_load_pid_tunings_from_file] | Loaded PID tunings.")
+                    return data
+                except Exception as e:
+                    logger.error(
+                        f"[_load_pid_tunings_from_file] | Error loading PID config: {e}"
+                    )
+                    return {}
+        else:
+            logger.warning(
+                "[_load_pid_tunings_from_file] No external PID config file found."
+            )
+            return {}
 
     def get_comp_time(self) -> float:
         """
@@ -221,34 +269,67 @@ class OlavesRobot(sr.Robot):
         logger.warning(
             "get_marker_orientation is not implemented for the virtual league."
         )
+        # TODO: Implement get_marker_orientation (pretty imperative for competition)
         raise NotImplementedError(
             "get_marker_orientation is not needed for the virtual league."
         )
 
-    def get_marker_by_id(self, marker_id: int) -> sr.marker:
+    def get_marker_by_id(
+        self, marker_id: int, search_angle: float = pi * 2, speed: float = 0.2
+    ) -> Optional[sr.Marker]:
         """
-        Retrieves a marker by its ID.
+        Retrieves a marker object by its ID.
 
         Searches the robot's camera feed for a marker with the specified ID.
 
         Parameters:
-            marker_id (int): The ID of the marker to retrieve.
+            marker_id (int): The ID of the marker to search for.
+            search_angle (float): The maximum angle (in radians) to rotate while searching.
+                                Defaults to 2pi (a full rotation).
+            speed (float): The speed at which to rotate the robot.
 
         Returns:
-            sr.Marker: The marker object corresponding to the given ID.
-
-        Raises:
-            ValueError: If no marker with the specified ID is found.
+            The marker object if found, or None if the marker could not be located.
         """
         logger.info(
             f"[get_marker_by_id] | Retrieving marker object for marker with id {marker_id}"
         )
-        marker = next((m for m in self.camera.see() if m.id == marker_id), None)
-        if marker is None:
-            logger.error(f"[get_marker_by_id] | Marker with ID {marker_id} not found.")
-            raise ValueError(f"Marker with ID {marker_id} not found.")
-        logger.debug(f"[get_marker_by_id] | Marker found: {marker}")
-        return marker
+        # Check if the marker is already in view.
+        markers = [m for m in self.camera.see() if m.id == marker_id]
+        if markers:
+            marker = sorted(markers, key=lambda x: x.position.distance)[0]
+            logger.info(
+                f"[get_marker_by_id] Marker {marker_id} found in initial check."
+            )
+            return marker
+
+        logger.info(
+            f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
+        )
+
+        turned_angle = 0.0
+        # Rotate in increments until we've turned the maximum allowed angle.
+        while turned_angle < search_angle:
+            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+            self.power((speed, -speed), 0.5, off=False)
+            turned_angle += pi / 4  # Approximate turn per step (45°); adjust as needed.
+
+            # Check the camera feed after the turn.
+            markers = [m for m in self.camera.see() if m.id == marker_id]
+            if markers:
+                marker = sorted(markers, key=lambda x: x.position.distance)[0]
+                logger.info(
+                    f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
+                )
+                self.power((0.0, 0.0), 0.0)  # Stop the robot.
+                return marker
+
+        # If the search completes without finding the marker, stop the robot.
+        self.power((0.0, 0.0), 0.0)
+        logger.info(
+            f"[get_marker_by_id] Could not find marker {marker_id} after rotating {search_angle:.2f} radians."
+        )
+        return None
 
     def _turn_to_marker(self, target_marker_id: int) -> None:
         """
@@ -269,28 +350,41 @@ class OlavesRobot(sr.Robot):
         ANGLE_TOLERANCE = 0.05
         ANGLE_TO_TIME = 0.05
 
-        markers = [m for m in self.camera.see() if m.id == target_marker_id]
-        if not markers:
+        # Retrieving PID gains from file
+        angle_pid_gains = self.pid_tunings.get(
+            "turn_to_marker_angle",
+            {"p": 0.4, "i": 0.2, "d": 0.3},  # fallback defaults
+        )
+
+        # Use the get_marker_by_id function to get the initial marker object.
+        marker = self.get_marker_by_id(target_marker_id)
+        if not marker:
             logger.error(
-                f"[move_to_marker] | Marker {target_marker_id} not seen initially."
+                f"[_turn_to_marker] Marker {target_marker_id} not found. Aborting turn."
             )
-            # TODO: Add some handling logic for when a marker can't be seen
             return
 
-        marker = sorted(markers, key=lambda x: x.position.distance)[0]
-        angle_error = init_angle = marker.position.horizontal_angle
+        init_angle = marker.position.horizontal_angle
+        angle_error = init_angle
 
         logger.debug(f"[move_to_marker] | Initial Angle Error: {angle_error:.3f} rad")
 
         # Angle PID:
         angle_pid = PIDController(
-            sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=angle_pid_gains["p"],
+            i=angle_pid_gains["i"],
+            d=angle_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
         # TODO: Tune PIDController for real robot
 
         iterations = 0
-        counter = 0
-        while abs(angle_error) > ANGLE_TOLERANCE and iterations != 1000 and counter < 5:
+        consecutive_lost_frames = 0
+        max_lost_frames = 5
+
+        while abs(angle_error) > ANGLE_TOLERANCE and iterations < 100:
             # Calculate PID corrections
             angle_correction = angle_pid.getCorrection(angle_error)
 
@@ -320,14 +414,24 @@ class OlavesRobot(sr.Robot):
             self.power((left_power, right_power), time_step, off=False)
 
             # Update marker information
-            markers = [m for m in self.camera.see() if m.id == target_marker_id]
-            if markers:
-                marker = markers[0]
-                counter = 0
+            marker = self.get_marker_by_id(target_marker_id)
+            if not marker:
+                logger.warning(
+                    f"[_turn_to_marker] | Lost marker {target_marker_id}. Conducting search."
+                )
+                consecutive_lost_frames += 1
+                if consecutive_lost_frames >= max_lost_frames:
+                    logger.error(
+                        "[_turn_to_marker] | Marker lost too many times, aborting."
+                    )
+                    break
+                continue
             else:
-                logger.error(f"[move_to_marker] | Marker {target_marker_id} lost.")
-                self.power((0.0, 0.0), 0.0)
-                counter += 1
+                consecutive_lost_frames = 0
+                angle_error = marker.position.horizontal_angle
+                logger.debug(
+                    f"[_turn_to_marker] Updated Angle Error: {angle_error:.3f} rad"
+                )
 
             angle_error = marker.position.horizontal_angle
 
@@ -339,7 +443,7 @@ class OlavesRobot(sr.Robot):
 
         # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
-        logger.debug("[move_to_marker] | Marker Reached")
+        logger.debug("[_turn_to_marker] | Completed or aborted turning to marker.")
 
     def _align_with_marker(self, marker, target_marker_pos: np.ndarray) -> None:
         """
@@ -354,6 +458,7 @@ class OlavesRobot(sr.Robot):
         Raises:
             NotImplementedError: Always raised as this method is not required for the virtual league.
         """
+        # TODO: Implement this function
         logger.warning("_align_with_marker is not implemented for the virtual league.")
         raise NotImplementedError(
             "_align_with_marker is not needed for the virtual league."
@@ -376,18 +481,16 @@ class OlavesRobot(sr.Robot):
         logger.info(
             f"[get_marker_pos] | Calculating position for marker ID {marker_id}."
         )
-        markers = self.camera.see()
-        # Just so that we are not left with unassigned variable names that might pull up an error in the program.
-        marker_orientation = 0
-        marker_distance = 0
-        for marker in markers:
-            if marker_id == marker.id:
-                marker_orientation = marker.orientation.yaw
-                marker_distance = marker.position.distance / 1000
 
-        # To check if the marker is actually visible or not
-        if marker_orientation == 0 or marker_distance == 0:
-            raise ValueError(f"Marker with ID {marker_id} not found.")
+        marker = self.get_marker_by_id(marker_id=marker_id)
+        if not marker:
+            logger.error(
+                f"[get_marker_pos] Marker {marker_id} not found. Aborting localisation."
+            )
+            return
+
+        marker_orientation = marker.orientation.yaw
+        marker_distance = marker.position.distance
 
         logger.debug(
             f"[get_marker_pos] | Target marker orientation: {marker_orientation}, Target marker distance: {marker_distance}"
@@ -613,17 +716,27 @@ class OlavesRobot(sr.Robot):
             (float, float): Adjusted (left, right) motor powers.
         """
 
-        # TODO: fix to allow turning
-        # Right now it sets the max power to 0.15, which means negative powers are disallowed, preventing turning ability
-
         def apply_min(val):
+            # If turning on the spot (opposite signs), don't forcibly push them in same direction
             if 0.0 < val < min_power:
                 return min_power
             elif -min_power < val < 0.0:
                 return -min_power
             return val
 
-        return (apply_min(left), apply_min(right))
+        # If signs of left and right differ, it's likely a turn.
+        # We'll apply a smaller threshold so it can spin in place:
+        if left * right < 0:
+            # turning case
+            turning_min = 0.05
+            left_adj = -turning_min if left < 0 else (turning_min if left > 0 else 0)
+            right_adj = -turning_min if right < 0 else (turning_min if right > 0 else 0)
+            return (left_adj, right_adj)
+        else:
+            # normal forward/back
+            left = apply_min(left)
+            right = apply_min(right)
+            return (left, right)
 
     def _wonky_wheels_correction(
         self, wheels: Tuple[float, float]
@@ -651,7 +764,7 @@ class OlavesRobot(sr.Robot):
 
     def zone_pallets(self) -> List[sr.marker]:
         logger.info(f"[zone_pallets] | Retrieving zone {self.zone} ids")
-        return self.zone_pallets(self.zone)
+        return self.pallet_dict[self.zone]
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """
@@ -729,9 +842,8 @@ class OlavesRobot(sr.Robot):
                 or self.get_marker_type(marker) == "pallet3"
             ):
                 highrisers = highrisers + 1
-        return [highrisers, 6 - highrisers]
 
-        self.power_board.outputs["OUT_H0"].is_enabled = False
+        return [highrisers, 6 - highrisers]
 
     def move_to_marker(self, marker_id: int) -> None:
         """
@@ -746,10 +858,21 @@ class OlavesRobot(sr.Robot):
         ANGLE_TOLERANCE = 0.1  # radians
         DIST_TO_TIME = 0.05  # Base duration for movement
 
-        markers = [m for m in self.camera.see() if m.id == marker_id]
-        if not markers:
-            logger.error(f"[move_to_marker] | Marker {marker_id} not seen initially.")
-            # TODO: Add some handling logic for when a marker can't be seen
+        dist_pid_gain = self.pid_tunings.get(
+            "turn_to_marker_angle",
+            {"p": 0.15, "i": 0.05, "d": 0.05},  # fallback defaults
+        )
+
+        angle_pid_gains = self.pid_tunings.get(
+            "turn_to_marker_angle",
+            {"p": 0.4, "i": 0.2, "d": 0.3},  # fallback defaults
+        )
+
+        markers = self.get_marker_by_id(marker_id=marker_id)
+        if not marker:
+            logger.error(
+                f"[move_to_marker] Marker {marker_id} not found. Aborting turn."
+            )
             return
 
         marker = sorted(markers, key=lambda x: x.position.distance)[0]
@@ -764,20 +887,32 @@ class OlavesRobot(sr.Robot):
 
         # Initialise PID controllers
         dist_pid = PIDController(
-            sp=0.0, p=0.15, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=dist_pid_gain["p"],
+            i=dist_pid_gain["i"],
+            d=dist_pid_gain["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
 
         angle_pid = PIDController(
-            sp=0.0, p=0.4, i=0.2, d=0.3, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=angle_pid_gains["p"],
+            i=angle_pid_gains["i"],
+            d=angle_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
         # TODO: Tune PIDContollers for the real competition
 
         iterations = 0
-        counter = 0
+        lost_counter = 0
+        max_lost_frames = 5
+
         while (
             (dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE)
-            and iterations != 1000
-            and counter < 5
+            and iterations < 1000
+            and lost_counter < max_lost_frames
         ):
             # Calculate PID corrections
             dist_correction = -dist_pid.getCorrection(dist_error)
@@ -810,36 +945,35 @@ class OlavesRobot(sr.Robot):
             # Apply motor power
             self.power((left_power, right_power), time_step, off=False)
 
-            # Update marker information
-            markers = [m for m in self.camera.see() if m.id == marker_id]
-            if markers:
-                marker = markers[0]
-                counter = 0
+            marker = self.get_marker_by_id(marker_id=marker_id)
+            if not marker:
+                logger.warning("[move_to_marker] | Marker lost during approach.")
+                lost_counter += 1
+                # Possibly do a short search or continue (continue seems easier to implement at 3AM)
+                continue
             else:
-                logger.error(f"[move_to_marker] | Marker {marker_id} lost.")
-                self.power((0.0, 0.0), 0.0)
-                counter += 1
-                if self.arduino.ultrasound_measure(2, 3) < DIST_TOLERANCE:
-                    logger.info(
-                        f"[move_to_marker] | Moving to marker distance minimisation"
-                    )
-                    self._move_to_marker_finalisation()
-                else:
-                    logger.error("[move_to_marker] | Marker not in close vicinity.")
-
-            # Update errors
-            dist_error = marker.position.distance / 1000.0
-            angle_error = marker.position.horizontal_angle
-
-            logger.debug(
-                f"[move_to_marker] | Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
-            )
+                lost_counter = 0
+                dist_error = marker.position.distance / 1000.0
+                angle_error = marker.position.horizontal_angle
 
             iterations += 1
 
-        # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
-        logger.debug("[move_to_marker] | Marker Reached")
+
+        # If we've lost it but are within ultrasonic range:
+        if lost_counter >= max_lost_frames:
+            logger.info(
+                "[move_to_marker] | Marker lost too many times, finalising with ultrasound approach if possible."
+            )
+            # NOTE: Will need to check docs for ultrasound in actual physical robot
+            if self.arduino.ultrasound_measure(2, 3) < (DIST_TOLERANCE * 1000):
+                self._move_to_marker_finalisation()
+            else:
+                logger.error(
+                    "[move_to_marker] | Marker not in close vicinity. Aborting approach."
+                )
+        else:
+            logger.debug("[move_to_marker] | Marker Reached or threshold met.")
 
     def _move_to_marker_finalisation(self) -> None:
         """
@@ -853,6 +987,10 @@ class OlavesRobot(sr.Robot):
         DIST_TOLERANCE = 0.1  # meters
         DIST_TO_TIME = 0.01  # Base duration for movement
 
+        dist_pid_gains = self.pid_tunings.get(
+            "move_to_marker_final", {"p": 0.2, "i": 0.05, "d": 0.05}
+        )
+
         init_dist = (
             self.arduino.ultrasound_measure(2, 3) / 1000.0
         )  # Convert mm to meters
@@ -863,10 +1001,18 @@ class OlavesRobot(sr.Robot):
             f"[_move_to_marker_finalisation] | Initial Distance Error: {dist_error:.3f} m"
         )
 
+        # TODO: Add error exception handling here to check that the ultrasound reading
+        # isn't invalid (e.g. reading of 2m is obviously not a marker that can be reached
+        # reasonably using ultrasound)
+
         # Initialise PID controllers
-        # Distance PID: Only P and I to prevent aggressive changes
         dist_pid = PIDController(
-            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=dist_pid_gains["p"],
+            i=dist_pid_gains["i"],
+            d=dist_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
         # TODO: Tune PIDControllers for the physical robot
 
@@ -884,7 +1030,7 @@ class OlavesRobot(sr.Robot):
 
             # Apply scaling with minimum power
             left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.05, center=0.1
+                left_power, right_power, min_power=0.05, center=0.05
             )
 
             logger.debug(
@@ -900,6 +1046,9 @@ class OlavesRobot(sr.Robot):
 
             # Apply motor power
             self.power((left_power, right_power), time_step, off=False)
+
+            dist_error = self.arduino.ultrasound_measure(2, 3) / 1000.0
+            iterations += 1
 
         logger.debug(
             "[_move_to_marker_finalisation] | Marker in position. Exiting Movement"
@@ -923,18 +1072,27 @@ class OlavesRobot(sr.Robot):
         ANGLE_TOLERANCE = 0.1  # radians
         DIST_TO_TIME = 0.5  # Base duration for movement
 
+        dist_pid_gains = self.pid_tunings.get(
+            "move_pos_dist", {"p": 0.2, "i": 0.05, "d": 0.05}
+        )
+        angle_pid_gains = self.pid_tunings.get(
+            "move_pos_angle", {"p": 0.4, "i": 0.1, "d": 0.3}
+        )
+
         current_position = self.get_pos()
 
         current_coords, phi = current_position[:2], current_position[2]
 
         destination_vector = target_position - current_coords
         angle = atan2(destination_vector[1], destination_vector[0])
-        distance = (destination_vector[0] ** 2 + destination_vector[1] ** 2) ** 0.5
+        distance = np.linalg.norm(destination_vector)
 
         init_dist = distance  # Convert mm to meters
-
         dist_error = init_dist
-        angle_error = angle
+
+        # Normalising angle error
+        angle_error = angle - phi
+        angle_error = (angle_error + pi) % (2 * pi) - pi
 
         logger.debug(
             f"[move_pos] | Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
@@ -942,11 +1100,20 @@ class OlavesRobot(sr.Robot):
 
         # Initialise PID controllers
         dist_pid = PIDController(
-            sp=0.0, p=0.2, i=0.05, d=0.05, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=dist_pid_gains["p"],
+            i=dist_pid_gains["i"],
+            d=dist_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
-
         angle_pid = PIDController(
-            sp=0.0, p=0.4, i=0.1, d=0.3, integrator_min=-5.0, integrator_max=5.0
+            sp=0.0,
+            p=angle_pid_gains["p"],
+            i=angle_pid_gains["i"],
+            d=angle_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
         )
         # TODO: Tune PIDControllers for physical robot
 
@@ -990,11 +1157,12 @@ class OlavesRobot(sr.Robot):
 
             current_coords, phi = current_position[:2], current_position[2]
 
-            destination_vector = target_position - current_coords
-            angle_error = atan2(destination_vector[1], destination_vector[0])
-            dist_error = (
-                destination_vector[0] ** 2 + destination_vector[1] ** 2
-            ) ** 0.5
+            destination_vector = np.array(target_position) - current_coords
+            dist_error = np.linalg.norm(destination_vector)
+            # Recompute angle error
+            desired_angle = atan2(destination_vector[1], destination_vector[0])
+            angle_error = desired_angle - phi
+            angle_error = (angle_error + pi) % (2 * pi) - pi
 
             logger.debug(
                 f"[move_pos] | Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error:.3f} rad"
