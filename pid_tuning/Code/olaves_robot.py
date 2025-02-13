@@ -85,7 +85,8 @@ class OlavesRobot(sr.Robot):
         Below is each controller type and which functions it is used for:
             - isolated_angle_pid_gains:
                 - _turn_to_marker
-                -
+            - move_dist_pid_gains
+            - move_angle_pid_gains
         """
         pid_tunings = self._load_pid_tunings_from_file()
 
