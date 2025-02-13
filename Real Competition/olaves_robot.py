@@ -1,7 +1,7 @@
 # olaves_robot.py
 
 from math import pi, sin, cos, atan2, sqrt
-from time import time
+from time import time, struct_time
 from typing import List, Tuple, Optional, Union
 from pid import PIDController
 
@@ -51,9 +51,9 @@ class OlavesRobot(sr.Robot):
         if not self.is_physical_robot:
             self.servo_board.servos[0].position = 1
 
-        # We will load any external PID tunings here
+        # We will load any external PID tunings here and initialise controllers for them
         # This allows for continuity between different testing runs
-        self.pid_tunings = self._load_pid_tunings_from_file()
+        self._initialise_PID_controllers()
 
     def _load_pid_tunings_from_file(self) -> dict:
         """
@@ -77,6 +77,59 @@ class OlavesRobot(sr.Robot):
                 "[_load_pid_tunings_from_file] No external PID config file found."
             )
             return {}
+
+    def _initialise_PID_controllers(self) -> None:
+        """
+        Initialises all PID controllers at the class level.
+
+        Below is each controller type and which functions it is used for:
+            - isolated_angle_pid_gains:
+                - _turn_to_marker
+                -
+        """
+        pid_tunings = self._load_pid_tunings_from_file()
+
+        # Retrieving PID Gains for isolated angle PID
+        isolated_angle_pid_gains = pid_tunings.get(
+            "isolated_angle_pid_gains",
+            {"p": 0.4, "i": 0.2, "d": 0.3},  # fallback defaults
+        )
+
+        # Setting isolated angle PID
+        self.isolated_angle_pid = PIDController(
+            sp=0.0,
+            p=isolated_angle_pid_gains["p"],
+            i=isolated_angle_pid_gains["i"],
+            d=isolated_angle_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
+        )
+
+        # Retrieving PID Gains for move functions
+        move_dist_pid_gains = pid_tunings.get(
+            "move_pos_dist", {"p": 0.2, "i": 0.05, "d": 0.05}
+        )
+        move_angle_pid_gains = pid_tunings.get(
+            "move_pos_angle", {"p": 0.4, "i": 0.1, "d": 0.3}
+        )
+
+        # Setting PIDs for move functions
+        self.move_dist_pid = PIDController(
+            sp=0.0,
+            p=move_dist_pid_gains["p"],
+            i=move_dist_pid_gains["i"],
+            d=move_dist_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
+        )
+        self.move_angle_pid = PIDController(
+            sp=0.0,
+            p=move_angle_pid_gains["p"],
+            i=move_angle_pid_gains["i"],
+            d=move_angle_pid_gains["d"],
+            integrator_min=-5.0,
+            integrator_max=5.0,
+        )
 
     def get_comp_time(self) -> float:
         """
@@ -115,7 +168,7 @@ class OlavesRobot(sr.Robot):
 
         return delta
 
-    def _update_time(self):
+    def _update_time(self) -> struct_time:
         """
         Updates and returns the internal timestamp.
 
@@ -129,7 +182,7 @@ class OlavesRobot(sr.Robot):
         logger.debug(f"Updated time: {self._last_time_updated:.3f}s")
         return self._last_time_updated
 
-    def encoder_pos(
+    def _encoder_pos(
         self,
     ) -> np.ndarray:
         """
@@ -142,7 +195,7 @@ class OlavesRobot(sr.Robot):
             np.ndarray: A 3-element numpy array containing the updated
                         [x, y, theta] of the robot.
         """
-        logger.info("[encoder_pos] | Calculating location using encoders")
+        logger.info("[_encoder_pos] | Calculating location using encoders")
         # MATHS FROM: https://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
 
         logger.info("Calculating position from encoder ticks.")
@@ -154,7 +207,7 @@ class OlavesRobot(sr.Robot):
 
         # Get the wheel ticks since last check
         ticks = self.get_motor_ticks()
-        logger.debug(f"[encoder_pos] | Encoder ticks received: {ticks}.")
+        logger.debug(f"[_encoder_pos] | Encoder ticks received: {ticks}.")
 
         # Update the timestamp to compute velocity based on delta time
         previous_time = self._last_time_updated
@@ -192,7 +245,7 @@ class OlavesRobot(sr.Robot):
         self._position = pos
 
         logger.debug(
-            f"[encoder_pos] | Encoder position updated to [x={pos[0]:.3f}, y={pos[1]:.3f}, theta={pos[2]:.3f}] after {delta_t:.3f}s."
+            f"[_encoder_pos] | Encoder position updated to [x={pos[0]:.3f}, y={pos[1]:.3f}, theta={pos[2]:.3f}] after {delta_t:.3f}s."
         )
 
         return pos
@@ -251,28 +304,34 @@ class OlavesRobot(sr.Robot):
             self.power((-0.4, -0.4), abs(distance) * DIST_TO_TIME)
         logger.debug(f"[_move] | Completed move {direction}.")
 
-    def get_marker_orientation(self, marker_id: int) -> float:
+    def _smart_turn(self, angle: float) -> None:
         """
-        Returns the absolute orientation of a specified marker.
-
-        This method is not needed for the virtual league and is intentionally left unimplemented.
-
-        Assumptions:
-            - To be based on new positioning system proposed by Shehryer and Francis
+        Uses PIDControllers to turn a specified 'angle' (float).
 
         Parameters:
-            marker_id (int): The ID of the marker.
-
-        Raises:
-            NotImplementedError: Always raised as this method is not required for the virtual league.
+            angle (float): The angle in radians the robot is to turn
         """
-        logger.warning(
-            "get_marker_orientation is not implemented for the virtual league."
-        )
-        # TODO: Implement get_marker_orientation (pretty imperative for competition)
-        raise NotImplementedError(
-            "get_marker_orientation is not needed for the virtual league."
-        )
+        r_x, r_y, r_theta = self.get_pos()
+
+        target_orientation = r_theta + angle
+
+        self.set_robot_orientation(target_orientation=target_orientation)
+
+    def _smart_move(self, distance: float) -> None:
+        """
+        Uses PIDControllers to move the robot a specified distance (float) forward.
+
+        Can be thought of as adding a vector to the robot position.
+
+        Parameters:
+            distance (float): The distance in meters the robot is to move forward
+        """
+        r_x, r_y, r_theta = self.get_pos()
+
+        destination_x = distance * cos(r_theta) + r_x
+        destination_y = distance * sin(r_theta) + r_y
+
+        self.move_pos((destination_x, destination_y))
 
     def get_marker_by_id(
         self, marker_id: int, search_angle: float = pi * 2, speed: float = 0.2
@@ -311,8 +370,8 @@ class OlavesRobot(sr.Robot):
         # Rotate in increments until we've turned the maximum allowed angle.
         while turned_angle < search_angle:
             # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-            self.power((speed, -speed), 0.5, off=False)
-            turned_angle += pi / 4  # Approximate turn per step (45°); adjust as needed.
+            self._smart_turn(pi / 16)
+            turned_angle += pi / 16
 
             # Check the camera feed after the turn.
             markers = [m for m in self.camera.see() if m.id == marker_id]
@@ -350,12 +409,6 @@ class OlavesRobot(sr.Robot):
         ANGLE_TOLERANCE = 0.05
         ANGLE_TO_TIME = 0.05
 
-        # Retrieving PID gains from file
-        angle_pid_gains = self.pid_tunings.get(
-            "turn_to_marker_angle",
-            {"p": 0.4, "i": 0.2, "d": 0.3},  # fallback defaults
-        )
-
         # Use the get_marker_by_id function to get the initial marker object.
         marker = self.get_marker_by_id(target_marker_id)
         if not marker:
@@ -369,24 +422,13 @@ class OlavesRobot(sr.Robot):
 
         logger.debug(f"[move_to_marker] | Initial Angle Error: {angle_error:.3f} rad")
 
-        # Angle PID:
-        angle_pid = PIDController(
-            sp=0.0,
-            p=angle_pid_gains["p"],
-            i=angle_pid_gains["i"],
-            d=angle_pid_gains["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
-        # TODO: Tune PIDController for real robot
-
         iterations = 0
         consecutive_lost_frames = 0
         max_lost_frames = 5
 
         while abs(angle_error) > ANGLE_TOLERANCE and iterations < 100:
             # Calculate PID corrections
-            angle_correction = angle_pid.getCorrection(angle_error)
+            angle_correction = self.isolated_angle_pid.getCorrection(angle_error)
 
             logger.debug(f"[move_to_marker] | Angle Correction: {angle_correction:.3f}")
 
@@ -473,7 +515,7 @@ class OlavesRobot(sr.Robot):
             marker_id (int): The ID of the marker.
 
         Returns:
-            Tuple[float, float]: A tuple containing the (x, y) coordinates of the marker.
+            Tuple[float, float, float]: A tuple containing the (x, y, theta) coordinates and orientation of the marker.
 
         Raises:
             ValueError: If the marker with the specified ID is not found.
@@ -491,9 +533,10 @@ class OlavesRobot(sr.Robot):
 
         marker_orientation = marker.orientation.yaw
         marker_distance = marker.position.distance
+        marker_horizontal_angle = marker.position.horizontal_angle
 
         logger.debug(
-            f"[get_marker_pos] | Target marker orientation: {marker_orientation}, Target marker distance: {marker_distance}"
+            f"[get_marker_pos] | Target marker yaw: {marker_orientation}, Target marker distance: {marker_distance}"
         )
 
         # Retrieves the robot current position to estimate where the marker is relative to it
@@ -534,8 +577,12 @@ class OlavesRobot(sr.Robot):
                 x_coord = x_vector - robot_x
                 y_coord = y_vector - robot_y
 
-        logger.debug(f"[get_marker_pos] | Marker coordinates: {(x_coord, y_coord)}")
-        return (x_coord, y_coord)
+        m_theta = pi + robot_theta + marker_orientation - marker_horizontal_angle
+
+        logger.debug(
+            f"[get_marker_pos] | Marker coordinates: {(x_coord, y_coord)}, Marker orientation: {m_theta}"
+        )
+        return (x_coord, y_coord, m_theta)
 
     def get_pos(
         self, test_markers: Optional[List[sr.marker]] = None
@@ -555,28 +602,105 @@ class OlavesRobot(sr.Robot):
         Raises:
             NotImplementedError: Indicates that the method's implementation is pending.
         """
-        logger.warning("get_pos method needs to be implemented.")
-        # TODO: Implement position estimation logic here
-        raise NotImplementedError("get_pos method needs to be implemented.")
+        # logger.warning("get_pos method needs to be implemented.")
+        # # TODO: Implement position estimation logic here
+        # raise NotImplementedError("get_pos method needs to be implemented.")
 
-    def set_robot_orientation(self, theta: float, phi: float) -> None:
+        return self._encoder_pos()
+
+    def set_robot_orientation(self, target_orientation: float) -> None:
         """
         Sets the robot's orientation to a specified angle using PID control.
 
-        The method adjusts the robot's orientation from the current angle `phi` to the target angle `theta`, minimising the error through PID control.
+        The method adjusts the robot's orientation from the current angle `r_theta` to the target angle `target_orientation`, minimising the error through PID control.
 
         Parameters:
-            theta (float): The target orientation angle in radians.
-            phi (float): The current orientation angle in radians.
-
-        Raises:
-            NotImplementedError: Indicates that the method's implementation is pending.
+            target_orientation (float): The target orientation angle in radians.
         """
-        logger.warning(f"set_robot_orientation method needs to be implemented.")
-        # TODO: Implement orientation setting logic using PID controller
-        raise NotImplementedError(
-            "set_robot_orientation method needs to be implemented."
+        logger.info(
+            f"[set_robot_orientation] | Setting robot orientation to {target_orientation}"
         )
+
+        ANGLE_TOLERANCE = 0.05
+        ANGLE_TO_TIME = 0.05
+
+        r_x, r_y, r_theta = self.get_pos()
+
+        init_angle = target_orientation - r_theta
+        angle_error = init_angle
+
+        logger.debug(
+            f"[set_robot_orientation] | Initial Angle Error: {init_angle:.3f} rad"
+        )
+
+        iterations = 0
+
+        while abs(angle_error) > ANGLE_TOLERANCE and iterations < 100:
+            # Calculate PID corrections
+            angle_correction = self.isolated_angle_pid.getCorrection(angle_error)
+
+            logger.debug(
+                f"[set_robot_orientation] | Angle Correction: {angle_correction:.3f}"
+            )
+
+            # Convert corrections into left/right motor power
+            left_power = -angle_correction
+            right_power = +angle_correction
+
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.05, center=0
+            )
+
+            logger.debug(
+                f"[set_robot_orientation] | Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+            )
+
+            # Determine dynamic time_step based on distance error
+            # This can help in smoother control as the robot approaches the target
+            time_step = min(
+                max((angle_error / init_angle) * ANGLE_TO_TIME, 0.1 * ANGLE_TO_TIME),
+                ANGLE_TO_TIME,
+            )
+
+            # Apply motor power
+            self.power((left_power, right_power), time_step, off=False)
+
+            r_x, r_y, r_theta = self.get_pos()
+
+            angle_error = target_orientation - r_theta
+
+            logger.debug(
+                f"[set_robot_orientation] | Updated Angle Error: {angle_error:.3f} rad"
+            )
+
+            iterations += 1
+
+        # Stop the robot once target is reached
+        self.power((0.0, 0.0), 0.0)
+        logger.debug(
+            "[set_robot_orientation] | Completed or aborted setting orientation."
+        )
+
+    @staticmethod
+    def _restrict_angle_range(theta: float) -> float:
+        """
+        Sets the input angle between -pi and pi
+
+        Parameters:
+            theta (float): Input angle to be restricted
+
+        Returns:
+            phi (float): The angle set to the restricted domain
+        """
+        if theta <= -pi:
+            phi = theta + 2 * pi
+        elif theta > pi:
+            phi = theta - 2 * pi
+        else:
+            phi = theta
+
+        return phi
 
     def power(
         self,
@@ -885,24 +1009,6 @@ class OlavesRobot(sr.Robot):
             f"[move_to_marker] | Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
         )
 
-        # Initialise PID controllers
-        dist_pid = PIDController(
-            sp=0.0,
-            p=dist_pid_gain["p"],
-            i=dist_pid_gain["i"],
-            d=dist_pid_gain["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
-
-        angle_pid = PIDController(
-            sp=0.0,
-            p=angle_pid_gains["p"],
-            i=angle_pid_gains["i"],
-            d=angle_pid_gains["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
         # TODO: Tune PIDContollers for the real competition
 
         iterations = 0
@@ -915,8 +1021,8 @@ class OlavesRobot(sr.Robot):
             and lost_counter < max_lost_frames
         ):
             # Calculate PID corrections
-            dist_correction = -dist_pid.getCorrection(dist_error)
-            angle_correction = angle_pid.getCorrection(angle_error)
+            dist_correction = -self.move_dist_pid.getCorrection(dist_error)
+            angle_correction = self.move_angle_pid.getCorrection(angle_error)
 
             logger.debug(
                 f"[move_to_marker] | Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"
@@ -984,12 +1090,7 @@ class OlavesRobot(sr.Robot):
         logger.info(
             f"[_move_to_marker_finalisation] | Minimising distance between robot and marker in the absence of camera feedback"
         )
-        DIST_TOLERANCE = 0.1  # meters
-        DIST_TO_TIME = 0.01  # Base duration for movement
-
-        dist_pid_gains = self.pid_tunings.get(
-            "move_to_marker_final", {"p": 0.2, "i": 0.05, "d": 0.05}
-        )
+        DIST_TOLERANCE = 0.01  # meters
 
         init_dist = (
             self.arduino.ultrasound_measure(2, 3) / 1000.0
@@ -1005,47 +1106,13 @@ class OlavesRobot(sr.Robot):
         # isn't invalid (e.g. reading of 2m is obviously not a marker that can be reached
         # reasonably using ultrasound)
 
-        # Initialise PID controllers
-        dist_pid = PIDController(
-            sp=0.0,
-            p=dist_pid_gains["p"],
-            i=dist_pid_gains["i"],
-            d=dist_pid_gains["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
-        # TODO: Tune PIDControllers for the physical robot
-
         iterations = 0
         while dist_error > DIST_TOLERANCE and iterations != 100:
-            # Calculate PID corrections
-            dist_correction = -dist_pid.getCorrection(dist_error)
-
             logger.debug(
-                f"[_move_to_marker_finalisation] | Distance Correction: {dist_correction:.3f}"
+                f"[_move_to_marker_finalisation] | Moving forward {dist_error}m"
             )
 
-            # Convert corrections into left/right motor power
-            left_power = right_power = dist_correction
-
-            # Apply scaling with minimum power
-            left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.05, center=0.05
-            )
-
-            logger.debug(
-                f"Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
-            )
-
-            # Determine dynamic time_step based on distance error
-            # This can help in smoother control as the robot approaches the target
-            time_step = min(
-                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
-                DIST_TO_TIME,
-            )
-
-            # Apply motor power
-            self.power((left_power, right_power), time_step, off=False)
+            self._smart_move(dist_error * 0.7)
 
             dist_error = self.arduino.ultrasound_measure(2, 3) / 1000.0
             iterations += 1
@@ -1098,33 +1165,14 @@ class OlavesRobot(sr.Robot):
             f"[move_pos] | Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
         )
 
-        # Initialise PID controllers
-        dist_pid = PIDController(
-            sp=0.0,
-            p=dist_pid_gains["p"],
-            i=dist_pid_gains["i"],
-            d=dist_pid_gains["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
-        angle_pid = PIDController(
-            sp=0.0,
-            p=angle_pid_gains["p"],
-            i=angle_pid_gains["i"],
-            d=angle_pid_gains["d"],
-            integrator_min=-5.0,
-            integrator_max=5.0,
-        )
-        # TODO: Tune PIDControllers for physical robot
-
         iterations = 0
 
         while (
             dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE
         ) and iterations != 1000:
             # Calculate PID corrections
-            dist_correction = -dist_pid.getCorrection(dist_error)
-            angle_correction = angle_pid.getCorrection(angle_error)
+            dist_correction = -self.move_dist_pid.getCorrection(dist_error)
+            angle_correction = self.move_angle_pid.getCorrection(angle_error)
 
             logger.debug(
                 f"[move_pos] | Distance Correction: {dist_correction:.3f}, Angle Correction: {angle_correction:.3f}"

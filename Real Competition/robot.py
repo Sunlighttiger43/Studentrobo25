@@ -29,7 +29,7 @@ def run_robot():
 
     configure_logging()
     # Call main from states
-    main()
+    r.move_pos((0, 1))
 
 
 run_robot()
