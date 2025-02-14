@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from olaves_robot import OlavesRobot
 
 import logging
+import math
 
 # Creating a logger
 logger = logging.getLogger(__name__)
@@ -159,7 +160,18 @@ class Hunting(State):
         Raises:
             ValueError: If 'our_markers' is empty.
         """
+
+        if len(our_markers) == 0:
+            raise ValueError("list of markers is empty!")
+
+        min = (0, 10000000)
+        for m in our_markers:
+            if m[1] < min[1]:
+                min = (m[0], m[1])
+        return min[0]
         pass
+
+         
 
     def which_marker(self, our_markers: List[Tuple[int, float]]):
         """
