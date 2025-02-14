@@ -44,3 +44,5 @@
 
 # Manufacturing TODOs:
 - Refer to the des team, I literally have no clue what's going on here.
+- Checking what motors we currently have
+  
