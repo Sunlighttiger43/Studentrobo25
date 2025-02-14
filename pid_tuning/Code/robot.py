@@ -4,9 +4,14 @@ import logging
 import json
 import random
 import os
+
 from olaves_robot import OlavesRobot
 from pid import PIDController
 from time import time
+
+# Tests, comment out all but the function to test
+from move_pos import run_pid_test
+# from move_to_marker import run_pid_test
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -63,18 +68,64 @@ class PIDTuningManager:
             # fallback
             return {"p": 0.1, "i": 0.0, "d": 0.0}
 
-    def propose_new_gains(self, best_gains):
+    def propose_new_gains(self, controller_name, pid_label, top_n=3, shake=0.10):
         """
-        Naive approach: random small perturbation in p, i, d
-        """
-        new_gains = {}
-        for k, v in best_gains.items():
-            # random ±10%
-            rand_factor = 1.0 + random.uniform(-0.1, 0.1)
-            new_gains[k] = v * rand_factor
+        Use the top_n best solutions from history to form a baseline via averaging,
+        then apply a small random 'shake' to each gain.
 
-            candidate = max(self.min_gain, min(self.max_gain, candidate))
-            new_gains[k] = candidate
+        Parameters:
+            - controller_name: e.g. 'move_to_marker'
+            - pid_label: 'dist' or 'angle'
+            - top_n: how many of the best solutions to average
+            - shake: e.g. 0.10 => ±10% random
+        Returns:
+            - new_gains dict { 'p': float, 'i': float, 'd': float }
+        """
+
+        c_data = self.data.get(controller_name, {})
+        history = c_data.get("history", [])
+
+        # If no history, just do a naive default:
+        if not history:
+            logger.warning(
+                "[propose_new_gains] | No history found, returning fallback."
+            )
+            return {"p": 0.2, "i": 0.05, "d": 0.1}
+
+        relevant_data = []
+        for entry in history:
+            if pid_label == "dist":
+                gains = entry["gains_dist"]
+            else:
+                gains = entry["gains_angle"]
+            relevant_data.append((gains, entry["score"]))
+
+        relevant_data.sort(key=lambda x: x[1])
+        top_entries = relevant_data[:top_n]
+
+        sum_p = sum(e[0]["p"] for e in top_entries)
+        sum_i = sum(e[0]["i"] for e in top_entries)
+        sum_d = sum(e[0]["d"] for e in top_entries)
+        n = len(top_entries)
+
+        baseline_p = sum_p / n
+        baseline_i = sum_i / n
+        baseline_d = sum_d / n
+
+        def perturb(val):
+            factor = 1.0 + random.uniform(-shake, shake)
+            new_val = val * factor
+            return max(self.min_gain, min(self.max_gain, new_val))
+
+        new_p = perturb(baseline_p)
+        new_i = perturb(baseline_i)
+        new_d = perturb(baseline_d)
+
+        new_gains = {"p": new_p, "i": new_i, "d": new_d}
+        logger.info(
+            f"[propose_new_gains] | Baseline from top {n}: p={baseline_p:.3f}, i={baseline_i:.3f}, d={baseline_d:.3f}"
+            f" => Proposed p={new_p:.3f}, i={new_i:.3f}, d={new_d:.3f}"
+        )
         return new_gains
 
     def update_results(self, controller_name, dist_gains, angle_gains, score):
@@ -109,77 +160,6 @@ def configure_logging():
     )
 
 
-def run_pid_test(robot: OlavesRobot, dist_gains, angle_gains, marker_id=0, runs=3):
-    """
-    Example test routine for 'move_to_marker' that uses the proposed dist & angle gains.
-    We measure performance with time to target & final error.
-
-    Real usage:
-      1. Set the robot's pid_tunings for 'move_to_marker_dist' and 'move_to_marker_angle'.
-      2. Command the robot to do a test (like move_to_marker on a known marker).
-      3. Measure performance metrics (time, overshoot, final error).
-      4. Return a "score" (lower is better).
-
-    Parameters:
-        - robot: The OlavesRobot instance
-        - dist_gains: dict with keys {p, i, d} for distance PID
-        - angle_gains: dict with keys {p, i, d} for angle PID
-        - marker_id: The ID of the marker to move to
-        - runs: How many times we repeat the test to reduce random noise
-
-    Returns:
-        - score: float where lower is better.
-
-    """
-    robot.move_dist_pid.p = dist_gains["p"]
-    robot.move_dist_pid.i = dist_gains["i"]
-    robot.move_dist_pid.d = dist_gains["d"]
-
-    robot.move_angle_pid.p = angle_gains["p"]
-    robot.move_angle_pid.i = angle_gains["i"]
-    robot.move_angle_pid.d = angle_gains["d"]
-
-    total_score = 0.0
-
-    for iteration in range(runs):
-        logger.info(
-            f"[run_pid_test] | Starting test run {iteration+1}/{runs} with gains: dist={dist_gains}, angle={angle_gains}"
-        )
-
-        start_t = time()
-
-        try:
-            robot.move_to_marker(marker_id)
-        except Exception as e:
-            # If something goes badly wrong, we penalise heavily
-            logger.error(f"[run_pid_test] | Move to marker failed with error: {e}")
-            total_score += 999.0
-            continue
-
-        end_t = time()
-        elapsed = end_t - start_t
-
-        final_marker = robot.get_marker_by_id(marker_id=marker_id)
-        if final_marker:
-            final_dist = final_marker.position.distance / 1000.0  # in meters
-        else:
-            # If we lost the marker, treat it as large error
-            final_dist = 5.0
-
-        this_run_score = elapsed + 30.0 * final_dist + 10.0
-
-        logger.info(
-            f"[run_pid_test] | Run {iteration+1}/{runs}: elapsed={elapsed:.2f}s, final_dist={final_dist:.2f}m, partial_score={this_run_score:.2f}"
-        )
-        total_score += this_run_score
-
-        robot.sleep(3.0)
-
-    final_score = total_score / runs
-    logger.info(f"[run_pid_test] | Final average score: {final_score:.2f}")
-    return final_score
-
-
 def run_robot():
     configure_logging()
     logger.info("Starting Robot & PID Tuning")
@@ -188,16 +168,15 @@ def run_robot():
 
     tuner = PIDTuningManager("pid_tuning_history.json")
 
-    best_dist = tuner.get_best_gains("move_to_marker", "dist")
-    best_angle = tuner.get_best_gains("move_to_marker", "angle")
+    new_dist = tuner.propose_new_gains("move_to_marker", "dist", top_n=5, shake=0.75)
+    new_angle = tuner.propose_new_gains("move_to_marker", "angle", top_n=5, shake=0.75)
 
-    new_dist = tuner.propose_new_gains(best_dist)
-    new_angle = tuner.propose_new_gains(best_angle)
+    # Run test
+    marker_id = 110
+    score = run_pid_test(r, new_dist, new_angle, marker_id=marker_id, runs=3)
 
-    score = run_pid_test(r, new_dist, new_angle)
-
+    # Store results
     tuner.update_results("move_to_marker", new_dist, new_angle, score)
-
     logger.info("PID Tuning cycle completed.")
 
 

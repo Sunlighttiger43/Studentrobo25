@@ -4,6 +4,7 @@ from math import pi, sin, cos, atan2, sqrt
 from time import time, struct_time
 from typing import List, Tuple, Optional, Union
 from pid import PIDController
+from zone_coords import zone_coords
 
 import numpy as np
 import sr.robot3 as sr
@@ -35,6 +36,8 @@ class OlavesRobot(sr.Robot):
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
         self._last_time_updated: float = 0  # seconds
         self.ticks = [0, 0]
+
+        self.zone_coords = zone_coords[self.zone]
 
         self.pallet_dict = {
             0: list(i for i in range(100, 120)),
@@ -335,7 +338,7 @@ class OlavesRobot(sr.Robot):
 
     def get_marker_by_id(
         self, marker_id: int, search_angle: float = pi * 2, speed: float = 0.2
-    ) -> Optional[sr.Marker]:
+    ) -> Optional[sr.marker]:
         """
         Retrieves a marker object by its ID.
 
@@ -500,10 +503,15 @@ class OlavesRobot(sr.Robot):
         Raises:
             NotImplementedError: Always raised as this method is not required for the virtual league.
         """
-        # TODO: Implement this function
-        logger.warning("_align_with_marker is not implemented for the virtual league.")
-        raise NotImplementedError(
-            "_align_with_marker is not needed for the virtual league."
+        target_position = (
+            target_marker_pos[0] * cos(target_marker_pos[2]),
+            target_marker_pos[1] * sin(target_marker_pos[2]),
+        )
+
+        self.move_pos(target_position=target_position)
+
+        self.set_robot_orientation(
+            target_orientation=self._restrict_angle_range(target_marker_pos[2] + pi)
         )
 
     def get_marker_pos(self, marker_id: int) -> Tuple[float, float]:
@@ -915,7 +923,7 @@ class OlavesRobot(sr.Robot):
         logger.info(
             f"[get_marker_type] | Getting the marker type of marker {marker.id}"
         )
-        if isinstance(marker, sr.Marker):
+        if isinstance(marker, sr.marker):
             marker_id = marker.id
         elif isinstance(marker, int):
             marker_id = marker
@@ -978,28 +986,17 @@ class OlavesRobot(sr.Robot):
         """
         logger.info(f"[move_to_marker] | Moving to Marker: {marker_id}")
 
-        DIST_TOLERANCE = 0.1  # meters
+        DIST_TOLERANCE = 0.15  # meters
         ANGLE_TOLERANCE = 0.1  # radians
         DIST_TO_TIME = 0.05  # Base duration for movement
 
-        dist_pid_gain = self.pid_tunings.get(
-            "turn_to_marker_angle",
-            {"p": 0.15, "i": 0.05, "d": 0.05},  # fallback defaults
-        )
-
-        angle_pid_gains = self.pid_tunings.get(
-            "turn_to_marker_angle",
-            {"p": 0.4, "i": 0.2, "d": 0.3},  # fallback defaults
-        )
-
-        markers = self.get_marker_by_id(marker_id=marker_id)
+        marker = self.get_marker_by_id(marker_id=marker_id)
         if not marker:
             logger.error(
                 f"[move_to_marker] Marker {marker_id} not found. Aborting turn."
             )
             return
 
-        marker = sorted(markers, key=lambda x: x.position.distance)[0]
         init_dist = marker.position.distance / 1000.0  # Convert mm to meters
 
         dist_error = init_dist
@@ -1139,13 +1136,6 @@ class OlavesRobot(sr.Robot):
         ANGLE_TOLERANCE = 0.1  # radians
         DIST_TO_TIME = 0.5  # Base duration for movement
 
-        dist_pid_gains = self.pid_tunings.get(
-            "move_pos_dist", {"p": 0.2, "i": 0.05, "d": 0.05}
-        )
-        angle_pid_gains = self.pid_tunings.get(
-            "move_pos_angle", {"p": 0.4, "i": 0.1, "d": 0.3}
-        )
-
         current_position = self.get_pos()
 
         current_coords, phi = current_position[:2], current_position[2]
@@ -1221,3 +1211,50 @@ class OlavesRobot(sr.Robot):
         # Stop the robot once target is reached
         self.power((0.0, 0.0), 0.0)
         logger.info("Position Reached")
+
+    def camera_pos(self) -> Optional[Tuple[float, float, float]]:
+        """
+        Estimate position from camera alone, if we see known field markers with known global positions.
+
+        DOES NOT WORK YET, DON'T USE
+
+        Returns:
+            (x, y, theta) or None if we cannot see any known marker or have no knowledge of marker positions.
+        """
+        logger.info(f"[camera_pos] | Using camera to find location")
+        markers = self.camera.see()
+        # Dictionary of known markers to positions:
+        self.zone_coords
+
+        visible_known_markers = [m for m in markers if m.id in range(27)]
+        if not visible_known_markers:
+            return self._encoder_pos()
+
+        # For simplicity, pick the first known marker, or do an average
+        # Suppose the known marker's global position is m_x, m_y, m_theta
+        # We measure our offset from that marker in camera coords => we can transform
+        # This is a placeholder. Real logic could be more complex or use multiple markers & solvers.
+        # One idea is to weight further markers less as they may be less accurate
+        marker = sorted(visible_known_markers, key=lambda x: x.position.distance)[0]
+        m_x, m_y, m_theta = self.zone_coords[marker.id]
+        logger.debug(
+            f"[camera_pos] | Marker {marker.id} Coordinates: {m_x, m_y, m_theta}"
+        )
+
+        # The marker is at (m_x, m_y). Our local camera reading says: distance = d, bearing = marker.position.rot_y
+        d = marker.position.distance / 1000.0 * cos(marker.position.vertical_angle)
+        bearing = marker.orientation.yaw
+        logger.debug(
+            f"[camera_pos] | Distance to marker: {d}, Bearing to marker: {bearing}, Vertical angle: {marker.position.vertical_angle}"
+        )
+
+        # Estimate: if the robot sees the marker at 'bearing' and distance 'd',
+        # then robot_x = m_x - d*cos(m_theta + bearing)
+        # This is a naive approach:
+        robot_x = m_x - d * cos(m_theta + bearing)
+        robot_y = m_y - d * sin(m_theta + bearing)
+
+        # For orientation, a naive guess might be robot_theta = m_theta + marker.yaw
+        robot_theta = (m_theta + marker.orientation.yaw) % (pi)
+
+        return (robot_x, robot_y, robot_theta)
