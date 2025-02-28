@@ -8,8 +8,6 @@
 
 ### In Progress/Under Review
 - In the following movement functions ("_turn_to_marker", "move_to_marker", "_move_to_marker_finalisation", "move_pos"(may be able to use the same controllers as "move_to_marker"))  tune PIDControllers for the physical robot (it is important to note that you can not use the same tunings between different systems) (IN PROGRESS: KIROLLOS (CURRENTLY TINKERING WITH A TUNING ALGORITHM))
-- Implement Positioning logic in "camera_pos" using camera utilities to estimate position (IN PROGRESS: KIROLLOS)
-    - Will also be recommended to create a log file for the system we are using for our positioning logic overall
 - Implement "align_with_marker" function (COMPLETED - TO BE TESTED: KIROLLOS)
 - In "_move_to_marker_finalisation": 
     - Implement some error checking to validate the ultrasound reading (COMPLETED: KIROLLOS)
@@ -27,6 +25,8 @@
 - Fix the "_scale" function to properly scale powers around a selected center
     - Currently implemented but commented out because it was really buggy and not really working
     - To be reviewed by someone who knows what they are doing
+- Implement Positioning logic in "camera_pos" using camera utilities to estimate position
+    - Will also be recommended to create a log file for the system we are using for our positioning logic overall
 
 ## robot TODOs:
 - Configure logger (Completed: KIROLLOS)

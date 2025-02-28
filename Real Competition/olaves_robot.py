@@ -20,12 +20,12 @@ logger.setLevel(logging.INFO)
 # Creating handlers
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-file = logging.FileHandler(filename="robot.log")
-file.setLevel(logging.DEBUG)
+# file = logging.FileHandler(filename="robot.log")
+# file.setLevel(logging.DEBUG)
 
 # Adding handlers to logger
 logger.addHandler(console)
-logger.addHandler(file)
+# logger.addHandler(file)
 
 
 class OlavesRobot(sr.Robot):

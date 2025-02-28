@@ -11,7 +11,10 @@ from time import time
 
 # Tests, comment out all but the function to test
 from move_pos import run_pid_test
+
 # from move_to_marker import run_pid_test
+
+# from smart_turn import run_pid_test
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
