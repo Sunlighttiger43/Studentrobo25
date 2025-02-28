@@ -1258,3 +1258,37 @@ class OlavesRobot(sr.Robot):
         robot_theta = (m_theta + marker.orientation.yaw) % (pi)
 
         return (robot_x, robot_y, robot_theta)
+
+    def pick_hold_box(self):
+        """
+        Picks up and holds the box.
+
+        Assumes that the box is directly ahead of the robot.
+
+        This method ensures the robot returns to its initial starting point and engages the servo to pick up the box.
+        It activates the power board to secure the box and logs the action.
+
+        Raises:
+            RuntimeError: If the servo or power board fails to engage.
+        """
+        logger.info(f"[pick_hold_box]: Picking up box.")
+        try:
+            # Sets the lifter to the lowest position
+            self.servo_board.servos[0].position = -1
+
+            logger.debug("Servo positioned to pick up the box.")
+
+            distance = self.arduino.ultrasound_measure(2, 3) * 1e-3
+            logger.debug(f"Measured distance: {distance} meters.")
+
+            # Activates vacuum pump
+            self.power_board.outputs["OUT_H0"].is_enabled = True
+
+            # Raises lifter to highest position
+            self.servo_board.servos[0].position = 1
+        except Exception as e:
+            logger.error(f"Failed to pick up and hold the box: {e}")
+            raise RuntimeError("Box pickup failed.") from e
+
+    def release_box(self):
+        self.power_board.outputs["OUT_H0"].is_enabled = False

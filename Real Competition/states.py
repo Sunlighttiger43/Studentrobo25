@@ -147,6 +147,39 @@ class Hunting(State):
         else:
             return our_markers
 
+    def decide_marker_placement(self):
+        self.total_towers = 0
+        """
+        Calculates where to put the next marker
+        assumed that we have all six boxes
+ 
+        Plan:
+         - first deposit all 6 boxes into the centre (capacity 2)
+    
+         - when boxes fall, move boxes to the 2nd area (capacity 3)
+         - when boxes fall, move boxes to the closest area (capcity 1)
+ 
+        main logic:
+        - keep trace of muber of towers wer have made
+          if we see more than the number of towers we have made, a box has fallen
+          find the box that has fallen(furthest from area centre) and place in next area
+        """
+        self.move_pos(0,0)
+        self.release_box()
+        self.total_towers += 1
+        visible_pallets = self.detect_highrise_pallets()
+        floor_pallets = visible_pallets[1]
+
+        if self.total_towers() < floor_pallets :
+            furthest_marker = []
+            our_markers = self.get_our_markers()
+            for marker in our_markers:
+                if self.get_marker_pos(marker[0])  : 
+                    "finish checking if the marker is not in the centre area, removes all in the area"
+                    pass
+                
+                
+
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
         Determines the closest marker from the list of own markers.
