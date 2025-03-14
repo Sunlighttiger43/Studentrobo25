@@ -5,18 +5,18 @@
 
 #define FW_VER 1
 
-// Defining pins
+// Encoder Pins
 const byte encoder0pinA = 2;
 const byte encoder1pinA = 3;
 const byte encoder0pinB = 4;
 const byte encoder1pinB = 5;
-const byte laserPin = 6;
-const int UtrigPin = 12;
-const int UechoPin = 11;
-const int DtrigPin = 10;
-const int DechoPin = 9;
+
+// Stepper Pins
+int M1dirpin = 4;  // Motor 1 direction pin
+int M1stepPin = 2; // Motor 1 pulse pin
+int M1enpin = 7;   // Motor 1 enable pin
+
 // Defining other variables
-int laserState = 0; // Whether the laser is tripped or not
 long USduration;
 int distance;
 byte encoder0PinALast;
@@ -27,86 +27,21 @@ int duration;
 boolean LDirection; // the rotation direction
 boolean RDirection;
 
-/*
-This sample code is for testing the 2 stepper motors
-The rotation velocity can be adjusted by the code switch
-Microcontroller: Arduino UNO
-*/
-int M1dirpin = 6; // Motor 1 direction pin
-int M1pulse = 7;  // Motor 1 pulse pin
-
-void setup()
+void stepperInit()
 {
     pinMode(M1dirpin, OUTPUT);
-    pinMode(M1pulse, OUTPUT);
-
-    Serial.begin(9600);
-}
-
-void FullRot() // Rotates the stepper motors 360 degrees
-{
-    Serial.print("Rotation time");
-    int j;
-    delayMicroseconds(2);
-    digitalWrite(M1dirpin, LOW);
-    for (j = 0; j <= 200; j++)
-    { // number of pulses sent - 200 is one full rotation
-        digitalWrite(M1pulse, LOW);
-        delayMicroseconds(500); // lower = faster
-        digitalWrite(M1pulse, HIGH);
-        delay(1); // millis
-    }
-}
-
-void CustomRot() // Rotates the stepper motors by a custom amount
-{
-    while (Serial.available() == 0)
-    {
-    }
-    int steps = Serial.read();
-    Serial.print(steps);
-    int j;
-    delayMicroseconds(2);
-    digitalWrite(M1dirpin, LOW);
-    for (j = 0; j < steps; j++)
-    { // number of pulses sent - 200 is one full rotation
-        digitalWrite(M1pulse, LOW);
-        delayMicroseconds(500); // lower = faster
-        digitalWrite(M1pulse, HIGH);
-        delay(1); // millis
-    }
-}
-void ReverseCustomRot() // Rotates the stepper motors by a custom amount
-{
-    while (Serial.available() == 0)
-    {
-    }
-    int steps = Serial.read();
-    Serial.print(steps);
-    int j;
-    delayMicroseconds(2);
-    digitalWrite(M1dirpin, HIGH);
-    for (j = 0; j < steps; j++)
-    { // number of pulses sent - 200 is one full rotation
-        digitalWrite(M1pulse, LOW);
-        delayMicroseconds(500); // lower = faster
-        digitalWrite(M1pulse, HIGH);
-        delay(1); // millis
-    }
+    pinMode(M1stepPin, OUTPUT);
+    pinMode(M1enpin, OUTPUT);
 }
 
 void setup()
 {
-    EncoderInit(); // Initialise the stepper motor pins
+    encoderInit(); // Initialise the encoder pins
+    stepperInit(); // Initialise the stepper motor pins
     Serial.begin(SERIAL_BAUD);
-    pinMode(UtrigPin, OUTPUT); // Sets the trigPin as an Output
-    pinMode(UechoPin, INPUT);  // Sets the echoPin as an Input
-    pinMode(DtrigPin, OUTPUT);
-    pinMode(DechoPin, INPUT);
-    pinMode(laserPin, INPUT_PULLUP); // Sets the laser pin to input with a pullup resistor
 }
 
-void EncoderInit()
+void encoderInit()
 {
     pinMode(encoder0pinB, INPUT);
     pinMode(encoder1pinB, INPUT);
@@ -164,14 +99,37 @@ void GetL()
 {
     Serial.print(lPulses); // Returns the number of left pulses to the python
 }
+
 void GetR()
 {
     Serial.print(rPulses); // Returns the number of right pulses to the python
 }
 
-void GetLaserState()
+void FullRot() // Rotates the stepper motors 360 degrees
 {
-    Serial.print(laserState); // Gets the state of the laser, whether it is tripped or not
+    Serial.print("Rotation time");
+
+    digitalWrite(M1enpin, LOW);
+
+    digitalWrite(M1dirpin, HIGH);
+    for (int j = 0; j <= 800; j++)
+    { // number of pulses sent - 200 is one full rotation (with no microstepping)
+        digitalWrite(M1stepPin, HIGH);
+        delayMicroseconds(500); // lower = faster
+        digitalWrite(M1stepPin, LOW);
+        delayMicroseconds(500);
+    }
+
+    digitalWrite(M1dirpin, LOW); // Reverse Direction
+    for (int j = 0; j <= 800; j++)
+    { // number of pulses sent - 200 is one full rotation (with no microstepping)
+        digitalWrite(M1stepPin, HIGH);
+        delayMicroseconds(500); // lower = faster
+        digitalWrite(M1stepPin, LOW);
+        delayMicroseconds(500);
+    }
+
+    digitalWrite(M1enpin, HIGH);
 }
 
 // Bunch of built in functions
@@ -218,32 +176,12 @@ void command_mode(int mode)
     pinMode(pin, mode);
 }
 
-void GetDistance(int trigPin, int echoPin) // Gets the distance of the object in front of the specified ultrasound sensor
-{
-    // Clears the trigPin
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    // Sets the trigPin on HIGH state for 10 micro seconds
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    // Reads the echoPin, returns the sound wave travel time in microseconds
-    USduration = pulseIn(echoPin, HIGH);
-    // Calculating the distance
-    distance = USduration * 0.034 / 2;
-    Serial.print(distance);
-    // Prints the distance on the Serial Monitor
-    // Serial.print("Distance: ");
-    // Serial.println(distance);
-}
-
 void loop()
 {
 
     duration = 0;
     delay(100);
     // Fetch all commands that are in the buffer
-    laserState = digitalRead(laserPin); // Gets the state of the laser
     while (Serial.available())
     {
         int selected_command = Serial.read();
@@ -281,17 +219,11 @@ void loop()
         case '>':
             GetR();
             break;
-        case 'u':
-            GetDistance(UtrigPin, UechoPin);
-            break;
-        case 'd':
-            GetDistance(DtrigPin, DechoPin);
-            break;
-        case 'b':
-            GetLaserState();
-            break;
         case 'f':
             FullRot();
+            break;
+        case 't':
+            Serial.print("Hello, the arduino is on");
             break;
         default:
             // A problem here: we do not know how to handle the command!

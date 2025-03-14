@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from olaves_robot import OlavesRobot
 
 import logging
-import math
 
 # Creating a logger
 logger = logging.getLogger(__name__)
@@ -164,21 +163,19 @@ class Hunting(State):
           if we see more than the number of towers we have made, a box has fallen
           find the box that has fallen(furthest from area centre) and place in next area
         """
-        self.move_pos(0,0)
+        self.move_pos(0, 0)
         self.release_box()
         self.total_towers += 1
         visible_pallets = self.detect_highrise_pallets()
         floor_pallets = visible_pallets[1]
 
-        if self.total_towers() < floor_pallets :
+        if self.total_towers() < floor_pallets:
             furthest_marker = []
             our_markers = self.get_our_markers()
             for marker in our_markers:
-                if self.get_marker_pos(marker[0])  : 
+                if self.get_marker_pos(marker[0]):
                     "finish checking if the marker is not in the centre area, removes all in the area"
                     pass
-                
-                
 
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
@@ -203,8 +200,6 @@ class Hunting(State):
                 min = (m[0], m[1])
         return min[0]
         pass
-
-         
 
     def which_marker(self, our_markers: List[Tuple[int, float]]):
         """
