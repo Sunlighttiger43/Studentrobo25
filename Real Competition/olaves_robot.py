@@ -57,6 +57,9 @@ class OlavesRobot(sr.Robot):
         # We will load any external PID tunings here and initialise controllers for them
         # This allows for continuity between different testing runs
         self._initialise_PID_controllers()
+        arduino = self.arduinos["Arduino1"]
+        my_servo_board = self.servo_board
+        my_power_board = self.power_board
 
     def _load_pid_tunings_from_file(self) -> dict:
         """
