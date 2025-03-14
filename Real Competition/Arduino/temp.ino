@@ -5,7 +5,7 @@
 
 #define FW_VER 1
 
-// Encoder Pins
+// Encoder Pins (THESE WILL NEED TO BE ADJUSTED WHEN SETTING UP)
 const byte encoder0pinA = 2;
 const byte encoder1pinA = 3;
 const byte encoder0pinB = 4;
@@ -27,18 +27,18 @@ int duration;
 boolean LDirection; // the rotation direction
 boolean RDirection;
 
-void stepperInit()
-{
-    pinMode(M1dirpin, OUTPUT);
-    pinMode(M1stepPin, OUTPUT);
-    pinMode(M1enpin, OUTPUT);
-}
-
 void setup()
 {
     encoderInit(); // Initialise the encoder pins
     stepperInit(); // Initialise the stepper motor pins
     Serial.begin(SERIAL_BAUD);
+}
+
+void stepperInit()
+{
+    pinMode(M1dirpin, OUTPUT);
+    pinMode(M1stepPin, OUTPUT);
+    pinMode(M1enpin, OUTPUT);
 }
 
 void encoderInit()
@@ -58,10 +58,12 @@ void LSpeed() // Increases or decreases
         if (val == LOW && LDirection)
         {
             LDirection = false; // Reverse
+            // Serial.print("Left wheel reversing")
         }
         else if (val == HIGH && !LDirection)
         {
             LDirection = true; // Forward
+            // Serial.print("Left wheel moving forward")
         }
     }
     encoder0PinALast = Lstate;
@@ -81,10 +83,12 @@ void RSpeed()
         if (val == LOW && RDirection)
         {
             RDirection = false; // Reverse
+            // Serial.print("Right wheel reversing")
         }
         else if (val == HIGH && !RDirection)
         {
             RDirection = true; // Forward
+            // Serial.print("Right wheel moving forward")
         }
     }
     encoder1PinALast = Rstate;
@@ -105,9 +109,9 @@ void GetR()
     Serial.print(rPulses); // Returns the number of right pulses to the python
 }
 
-void FullRot() // Rotates the stepper motors 360 degrees
+void TestRot() // Tests the rotation of the stepper motors
 {
-    Serial.print("Rotation time");
+    Serial.print("[arduino.steppers] | Testing Rotation");
 
     digitalWrite(M1enpin, LOW);
 
@@ -125,6 +129,44 @@ void FullRot() // Rotates the stepper motors 360 degrees
     { // number of pulses sent - 200 is one full rotation (with no microstepping)
         digitalWrite(M1stepPin, HIGH);
         delayMicroseconds(500); // lower = faster
+        digitalWrite(M1stepPin, LOW);
+        delayMicroseconds(500);
+    }
+
+    digitalWrite(M1enpin, HIGH);
+}
+
+void RaiseArm()
+{
+    digitalWrite(M1enpin, LOW);
+    digitalWrite(M1dirpin, HIGH);
+
+    for (int j = 0, j <= 200, j++)
+    // With no microstepping, 200 is the number of steps for a full rotation
+    // To raise the arm, we will raise it by one full rotation for now (this can be adjusted, e.g. raise
+    // the arm for one box height)
+    {
+        digitalWrite(M1stepPin, HIGH);
+        delayMicroseconds(500);
+        digitalWrite(M1stepPin, LOW);
+        delayMicroseconds(500);
+    }
+
+    digitalWrite(M1enpin, HIGH);
+}
+
+void LowerArm()
+{
+    digitalWrite(M1enpin, LOW);
+    digitalWrite(M1dirpin, LOW);
+
+    for (int j = 0, j <= 200, j++)
+    // With no microstepping, 200 is the number of steps for a full rotation
+    // To raise the arm, we will lower it by one full rotation for now (this can be adjusted, e.g. lower
+    // the arm for one box height)
+    {
+        digitalWrite(M1stepPin, HIGH);
+        delayMicroseconds(500);
         digitalWrite(M1stepPin, LOW);
         delayMicroseconds(500);
     }
@@ -220,7 +262,13 @@ void loop()
             GetR();
             break;
         case 'f':
-            FullRot();
+            TestRot();
+            break;
+        case 'u':
+            RaiseArm();
+            break;
+        case 'd':
+            LowerArm();
             break;
         case 't':
             Serial.print("Hello, the arduino is on");
