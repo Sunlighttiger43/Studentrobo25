@@ -30,6 +30,6 @@ def run_robot():
     configure_logging()
     # Call main from states
     r.move_pos((0, 1))
-
+ 
 
 run_robot()
