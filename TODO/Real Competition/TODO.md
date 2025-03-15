@@ -18,6 +18,9 @@
 - Implement orientation logic in "set_robot_orientation" using positioning logic and PID contol to set the robot's orientation to a desired value (COMPLETED - TO BE TESTED: KIROLLOS)
 - Implement "get_marker_pos" (COMPLETED - TO BE TESTED: AARIT)
 - In the following movement functions ("_turn_to_marker", "move_to_marker") add handling logic for when the target marker is no longer visible (COMPLETED - TO BE TESTED: KIROLLOS)
+  Implement Positioning logic in "camera_pos" using camera utilities to estimate position (COMPLETED AARIT - TO BE TESTED)
+  - Will also be recommended to create a log file for the system we are using for our positioning logic overall
+  - Need to check if coordinates satisfy teh functions needs
 
 ### Untouched
 - Implement Positioning logic in "get_pos" combining camera and encoder position systems (look into Kalman Filters, if uncertain, contact Kirollos for help with linalg)
@@ -25,8 +28,7 @@
 - Fix the "_scale" function to properly scale powers around a selected center
     - Currently implemented but commented out because it was really buggy and not really working
     - To be reviewed by someone who knows what they are doing
-- Implement Positioning logic in "camera_pos" using camera utilities to estimate position
-    - Will also be recommended to create a log file for the system we are using for our positioning logic overall
+- 
 
 ## robot TODOs:
 - Configure logger (Completed: KIROLLOS)
@@ -35,12 +37,13 @@
 ### Completed:
 
 ### In Progress/Under Review
-
-### Untouched
+[All being done by Pragathi, Kushal, Yash, Dev - TO BE TESTED]
 - Review viability of states logic in real competition
-    - Double check with the design team to be more aware of the goal
+- Double check with the design team to be more aware of the goal
 - In "Hunting.run", add logic for knowing where to drop off pallets
 - In "Hunting.run", add fallback logic for when no markers are seen
+### Untouched
+
 
 # Manufacturing TODOs:
 - Refer to the des team, I literally have no clue what's going on here.
