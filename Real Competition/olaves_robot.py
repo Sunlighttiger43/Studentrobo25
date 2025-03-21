@@ -1,5 +1,5 @@
 # olaves_robot.py
-
+import math
 from math import pi, sin, cos, atan2, sqrt
 from time import time, struct_time
 from typing import List, Tuple, Optional, Union
@@ -1215,52 +1215,39 @@ class OlavesRobot(sr.Robot):
         self.power((0.0, 0.0), 0.0)
         logger.info("Position Reached")
 
-    def camera_pos(self) -> Optional[Tuple[float, float, float]]:
+    def camera_pos(self) -> Optional[Tuple[float, float]]:
         """
         Estimate position from camera alone, if we see known field markers with known global positions.
 
         DOES NOT WORK YET, DON'T USE
 
         Returns:
-            (x, y, theta) or None if we cannot see any known marker or have no knowledge of marker positions.
+            (x, y) or None if we cannot see any known marker or have no knowledge of marker positions.
         """
         logger.info(f"[camera_pos] | Using camera to find location")
         markers = self.camera.see()
         # Dictionary of known markers to positions:
-        self.zone_coords
+        zone_coordinates = self.zone_coords
 
         visible_known_markers = [m for m in markers if m.id in range(27)]
         if not visible_known_markers:
             return self._encoder_pos()
+        if len(visible_known_markers) < 2:
+            return self._encoder_pos()
 
-        # For simplicity, pick the first known marker, or do an average
-        # Suppose the known marker's global position is m_x, m_y, m_theta
-        # We measure our offset from that marker in camera coords => we can transform
-        # This is a placeholder. Real logic could be more complex or use multiple markers & solvers.
-        # One idea is to weight further markers less as they may be less accurate
+        # This method uses two of the markers and uses a predetermined formula with proof already figured out
         marker = sorted(visible_known_markers, key=lambda x: x.position.distance)[0]
-        m_x, m_y, m_theta = self.zone_coords[marker.id]
-        logger.debug(
-            f"[camera_pos] | Marker {marker.id} Coordinates: {m_x, m_y, m_theta}"
-        )
+        #Let a = first marker x position, b = first marker y position, c = second marker x position, d = second marker y position
+        a, b, c, d = marker[0][1], marker[0][2], marker[1][1], marker[1][2]
+        #Let theta and alpha also be angles for first marker and second marker respectively - need to check if MARKER ID IS THIRD POSITION
+        theta, alpha = marker.orientation.yaw(marker[0][0]), marker.orientation.yaw(marker[1][0])
 
-        # The marker is at (m_x, m_y). Our local camera reading says: distance = d, bearing = marker.position.rot_y
-        d = marker.position.distance / 1000.0 * cos(marker.position.vertical_angle)
-        bearing = marker.orientation.yaw
-        logger.debug(
-            f"[camera_pos] | Distance to marker: {d}, Bearing to marker: {bearing}, Vertical angle: {marker.position.vertical_angle}"
-        )
+        x = ((math.tan(theta)*a) + b - a + (math.tan(alpha)*c))/((math.tan(theta)) + (math.tan(alpha)))
+        y = math.tan(theta)*x - math.tan(theta) * a + b
+        #Coordinates returned back - this was proved GEOMETRICALLY, See AARIT for Proof
+        return (x,y)
 
-        # Estimate: if the robot sees the marker at 'bearing' and distance 'd',
-        # then robot_x = m_x - d*cos(m_theta + bearing)
-        # This is a naive approach:
-        robot_x = m_x - d * cos(m_theta + bearing)
-        robot_y = m_y - d * sin(m_theta + bearing)
 
-        # For orientation, a naive guess might be robot_theta = m_theta + marker.yaw
-        robot_theta = (m_theta + marker.orientation.yaw) % (pi)
-
-        return (robot_x, robot_y, robot_theta)
 
     def pick_hold_box(self):
         """
