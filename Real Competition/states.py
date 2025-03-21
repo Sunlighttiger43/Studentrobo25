@@ -55,7 +55,7 @@ class MainLoop(State):
         Notes:
             - Intensity increases over time and with the number of pallets.
             - This function can be extended to include more factors influencing intensity.
-        """
+        
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
         boxes_left = 6 - self._get_number_of_pallets()
@@ -70,11 +70,22 @@ class MainLoop(State):
             intensity = 2
         elif boxes_left >= 2:
             intensity = 1
-        """
+        
         we remoddelled the intensity so that it will keep hunting until 2 boxes 
         it will switch to the knocking state if we have 15 seconds left with 2 boxes or 1 box left with 10 seconds or we have 0 boxes left
         if the time_elapsed is past the total round time, it will switch to sleep state
         """
+        elapsed_time=self.r.get_comp_time()
+        remaining_time=150-elapsed_time
+        if remaining_time<=20:
+            self.move_pos((0,-7.5))
+            self.lift()
+            self._move(0.15)
+        if remaining_time<=3:
+            self.open()
+            self.open()
+            self._move(-0.5)
+
 
         logger.debug(
             f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})"
@@ -153,10 +164,9 @@ class Hunting(State):
         assumed that we have all six boxes
  
         Plan:
-         - first deposit all 6 boxes into the centre (capacity 2)
-    
-         - when boxes fall, move boxes to the 2nd area (capacity 3)
-         - when boxes fall, move boxes to the closest area (capcity 1)
+         - first collect all 6 boxes (depending on the time from testing)
+         - once enough boxes are collected, while storing them in the robot, head to other towers to knock them down
+         - in the last 10 seconds head to the centre and deposit them safely, releasing them at the last second to decrease the chance of it falling
  
         main logic:
         - keep trace of muber of towers wer have made
@@ -168,14 +178,29 @@ class Hunting(State):
         self.total_towers += 1
         visible_pallets = self.detect_highrise_pallets()
         floor_pallets = visible_pallets[1]
+<<<<<<< HEAD
+        """
+=======
 
+>>>>>>> 81fe9a51e410442ab8c45a3e0ed0fcf5aea73f3d
         if self.total_towers() < floor_pallets:
             furthest_marker = []
             our_markers = self.get_our_markers()
             for marker in our_markers:
+<<<<<<< HEAD
+                coords = self.get_marker_pos(marker[0])
+                marker_x_coord , marker_y_coord = coords[0],coords[1]
+                if "x coord of centre top corner" >= marker_x_coords >= "x value of the centre bottom corner" and "y coord of centre top corner" >= marker_x_coord >= "y coord of centre bottom corner" :
+                    
+                "finish checking if the marker is not in the centre area, removes all in the area"
+                pass
+                
+        """
+=======
                 if self.get_marker_pos(marker[0]):
                     "finish checking if the marker is not in the centre area, removes all in the area"
                     pass
+>>>>>>> 81fe9a51e410442ab8c45a3e0ed0fcf5aea73f3d
 
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
@@ -269,10 +294,26 @@ class Hunting(State):
         self.robot.move_to_marker(closest_marker_id)
         self.robot.pick_hold_box()
         # TODO: need logic on which area to drop the box
-        self.robot.move_pos([0, 0])
+        self.robot.move_pos(0, 0)
         self.robot.drop_box()
+        
+        markers=self.get_our_markers()
+        for i in range(len(markers)):
+            self.move_to_marker(markers[i])
+            self.lift
+            self._move(0.2)
+            self.open()
+            self.lower()
+            self.close()
 
+    """ this gets a list of our markers, moves to each of them, lifts each of them and stores it inside the robot     
+    """
         return MainLoop(self.robot)
+
+
+        
+
+    
 
 
 class Knocking(State):
@@ -282,7 +323,7 @@ class Knocking(State):
 
     def enemy_boxes(self):
         """
-        Here I am trying to identify which enemy boxes it can see which are on high rises
+        Here I am trying to identify which enemy boxes it can see, which are on high rises
         :return: list[enemy_boxes]
         """
         print(f"Returning list of enemy markers")
