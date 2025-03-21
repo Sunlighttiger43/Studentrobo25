@@ -1238,9 +1238,9 @@ class OlavesRobot(sr.Robot):
         # This method uses two of the markers and uses a predetermined formula with proof already figured out
         marker = sorted(visible_known_markers, key=lambda x: x.position.distance)[0]
         #Let a = first marker x position, b = first marker y position, c = second marker x position, d = second marker y position
-        a, b, c, d = marker[0][0], marker[0][1], marker[1][0], marker[1][1]
+        a, b, c, d = marker[0][1], marker[0][2], marker[1][1], marker[1][2]
         #Let theta and alpha also be angles for first marker and second marker respectively - need to check if MARKER ID IS THIRD POSITION
-        theta, alpha = marker.orientation.yaw(marker[0][2]), marker.orientation.yaw(marker[1][2])
+        theta, alpha = marker.orientation.yaw(marker[0][0]), marker.orientation.yaw(marker[1][0])
 
         x = ((math.tan(theta)*a) + b - a + (math.tan(alpha)*c))/((math.tan(theta)) + (math.tan(alpha)))
         y = math.tan(theta)*x - math.tan(theta) * a + b
