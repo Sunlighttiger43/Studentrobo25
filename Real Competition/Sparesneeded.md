@@ -4,3 +4,5 @@ what we need as spares
   - 
 - people
 - filament for 3d printer
+- screws of all sizes
+- food :) :)  :) :)
