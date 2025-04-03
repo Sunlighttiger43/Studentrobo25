@@ -2,7 +2,10 @@ what we need as spares
 - sponges
 - 3d printed parts
   - 
-- people
+- steppers
+- stepper drivers
+- wires
 - filament for 3d printer
 - screws of all sizes
 - food :) :)  :) :)
+- people
