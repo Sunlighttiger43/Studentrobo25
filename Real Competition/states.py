@@ -45,7 +45,7 @@ class MainLoop(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
 
-    def _calculate_intensity(self) -> int:
+    '''def _calculate_intensity(self) -> int:
         """
         Calculates the current intensity based on time elapsed and number of pallets.
 
@@ -91,6 +91,7 @@ class MainLoop(State):
             f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})"
         )
         return intensity
+        '''
 
     def _get_number_of_pallets(self) -> int:
         """
@@ -119,16 +120,22 @@ class MainLoop(State):
 
         intensity = self._calculate_intensity()
         logger.info(f"Current Intensity: {intensity}")
-
-        if intensity == 1:
-            logger.info("Transitioning to Hunting state.")
-            return Hunting(self.r)
-        elif intensity == 2:
-            logger.info("Transitioning to Knocking state.")
-            return Knocking(self.r)
-        elif intensity == 3:
-            logger.info("Intensity threshold reached. Terminating.")
+        
+        elapsed_time=self.r.get_comp_time()
+        remaining_time=150-elapsed_time
+        if remaining_time<=20:
+            self.move_pos((0,-7.5))
+            self.lift()
+            self._move(0.15)
+        if remaining_time<=3:
+            self.open()
+            self.open()
+            self._move(-0.5)
+        if remaining_time=0:
             return None
+        logger.info("Transitioning to Hunting state.")
+        return Hunting(self.r)
+
 
 
 class Hunting(State):
@@ -178,29 +185,13 @@ class Hunting(State):
         self.total_towers += 1
         visible_pallets = self.detect_highrise_pallets()
         floor_pallets = visible_pallets[1]
-<<<<<<< HEAD
-        """
-=======
-
->>>>>>> 81fe9a51e410442ab8c45a3e0ed0fcf5aea73f3d
         if self.total_towers() < floor_pallets:
             furthest_marker = []
             our_markers = self.get_our_markers()
             for marker in our_markers:
-<<<<<<< HEAD
-                coords = self.get_marker_pos(marker[0])
-                marker_x_coord , marker_y_coord = coords[0],coords[1]
-                if "x coord of centre top corner" >= marker_x_coords >= "x value of the centre bottom corner" and "y coord of centre top corner" >= marker_x_coord >= "y coord of centre bottom corner" :
-                    
-                "finish checking if the marker is not in the centre area, removes all in the area"
-                pass
-                
-        """
-=======
                 if self.get_marker_pos(marker[0]):
                     "finish checking if the marker is not in the centre area, removes all in the area"
                     pass
->>>>>>> 81fe9a51e410442ab8c45a3e0ed0fcf5aea73f3d
 
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
@@ -305,16 +296,15 @@ class Hunting(State):
             self.open()
             self.lower()
             self.close()
+        return Knocking()
 
-    """ this gets a list of our markers, moves to each of them, lifts each of them and stores it inside the robot     
-    """
-        return MainLoop(self.robot)
+        """ this gets a list of our markers, moves to each of them, lifts each of them and stores it inside the robot     
+        """
 
 
         
 
-    
-
+     
 
 class Knocking(State):
     def __init__(self, robot: OlavesRobot):
