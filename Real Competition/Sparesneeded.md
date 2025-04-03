@@ -8,5 +8,14 @@ what we need as spares
 - aluminium, hacksaw, jig
 - filament for 3d printer
 - screws of all sizes
+- MDF
+
+
+
+
+
+
+
+
 - food :) :)  :) :)
 - people
