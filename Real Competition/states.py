@@ -124,14 +124,14 @@ class MainLoop(State):
         elapsed_time=self.r.get_comp_time()
         remaining_time=150-elapsed_time
         if remaining_time<=20:
-            self.move_pos((0,-7.5))
-            self.lift()
-            self._move(0.15)
+            self.robot.move_pos((0,-7.5))
+            self.robot.lift()
+            self.robot._move(0.15)
         if remaining_time<=3:
-            self.open()
-            self.open()
-            self._move(-0.5)
-        if remaining_time=0:
+            self.robot.open()
+            self.robot.open()
+            self.robot._move(-0.5)
+        if remaining_time==0:
             return None
         logger.info("Transitioning to Hunting state.")
         return Hunting(self.r)
@@ -180,12 +180,12 @@ class Hunting(State):
           if we see more than the number of towers we have made, a box has fallen
           find the box that has fallen(furthest from area centre) and place in next area
         """
-        self.move_pos(0, 0)
-        self.release_box()
+        self.robot.move_pos(0, 0)
+        self.robot.release_box()
         self.total_towers += 1
-        visible_pallets = self.detect_highrise_pallets()
+        visible_pallets = self.robot.detect_highrise_pallets()
         floor_pallets = visible_pallets[1]
-        if self.total_towers() < floor_pallets:
+        if self.total_towers < floor_pallets:
             furthest_marker = []
             our_markers = self.get_our_markers()
             for marker in our_markers:
