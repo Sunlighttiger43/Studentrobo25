@@ -4,6 +4,11 @@
         "i": 0.01,
         "d": 0.025
     },
+    "isolated_distance_pid_gains": {
+        "p": 0.0,
+        "i": 0.0,
+        "d": 0.0
+    },
     "move_pos_dist": {
         "p": 0.05,
         "i": 0.01,
