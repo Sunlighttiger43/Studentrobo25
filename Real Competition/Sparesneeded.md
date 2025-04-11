@@ -10,7 +10,7 @@ what we need as spares
 - screws of all sizes
 - MDF
 - spirit level
-
+- cardboard - for additions to the robot
 
 
 
