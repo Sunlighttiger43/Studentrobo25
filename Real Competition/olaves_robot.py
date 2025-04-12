@@ -93,11 +93,6 @@ class OlavesRobot(sr.Robot):
     def _initialise_PID_controllers(self) -> None:
         """
         Initialises all PID controllers at the class level.
-
-        Below is each controller type and which functions it is used for:
-            - isolated_angle_pid_gains:
-                - _turn_to_marker
-                -
         """
         pid_tunings = self._load_pid_tunings_from_file()
 
@@ -374,26 +369,26 @@ class OlavesRobot(sr.Robot):
             )
             return marker
 
-        # logger.info(
-        #     f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
-        # )
+        logger.info(
+            f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
+        )
 
-        # turned_angle = 0.0
-        # # Rotate in increments until we've turned the maximum allowed angle.
-        # while turned_angle < search_angle:
-        #     # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-        #     self._smart_turn(pi / 16)
-        #     turned_angle += pi / 16
+        turned_angle = 0.0
+        # Rotate in increments until we've turned the maximum allowed angle.
+        while turned_angle < search_angle:
+            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+            self._smart_turn(pi / 16)
+            turned_angle += pi / 16
 
-        #     # Check the camera feed after the turn.
-        #     markers = [m for m in self.camera.see() if m.id == marker_id]
-        #     if markers:
-        #         marker = sorted(markers, key=lambda x: x.position.distance)[0]
-        #         logger.info(
-        #             f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
-        #         )
-        #         self.power((0.0, 0.0), 0.0)  # Stop the robot.
-        #         return marker
+            # Check the camera feed after the turn.
+            markers = [m for m in self.camera.see() if m.id == marker_id]
+            if markers:
+                marker = sorted(markers, key=lambda x: x.position.distance)[0]
+                logger.info(
+                    f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
+                )
+                self.power((0.0, 0.0), 0.0)  # Stop the robot.
+                return marker
 
         # If the search completes without finding the marker, stop the robot.
         self.power((0.0, 0.0), 0.0)
@@ -641,9 +636,9 @@ class OlavesRobot(sr.Robot):
         )
 
         ANGLE_TOLERANCE = 0.05
-        ANGLE_TO_TIME = 0.05
+        ANGLE_TO_TIME = 0.1
 
-        r_x, r_y, r_theta = self.get_pos()
+        r_x, r_y, r_theta = self._encoder_pos()
 
         init_angle = target_orientation - r_theta
         angle_error = init_angle
@@ -668,7 +663,7 @@ class OlavesRobot(sr.Robot):
 
             # Apply scaling with minimum power
             left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.05, center=0
+                left_power, right_power, min_power=0.1, center=0
             )
 
             logger.debug(
@@ -678,8 +673,8 @@ class OlavesRobot(sr.Robot):
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
             time_step = min(
-                max((angle_error / init_angle) * ANGLE_TO_TIME, 0.1 * ANGLE_TO_TIME),
                 ANGLE_TO_TIME,
+                max((init_angle - angle_error) * ANGLE_TO_TIME, ANGLE_TO_TIME * 0.25),
             )
 
             # Apply motor power
@@ -1007,12 +1002,17 @@ class OlavesRobot(sr.Robot):
         """
         Moves the robot to a specified marker using PID controllers.
 
+        When finishes, assumes that the marker has already been found
+
         Parameters:
             marker_id (int): The ID of the target marker.
+
+        Raises:
+            "MarkerNotFound" : Exception when the specified marker is not found by the robot
         """
         logger.info(f"[move_to_marker] | Moving to Marker: {marker_id}")
 
-        DIST_TOLERANCE = 0.4  # meters
+        DIST_TOLERANCE = 0.1  # meters
         ANGLE_TOLERANCE = 0.05  # radians
         DIST_TO_TIME = 0.05  # Base duration for movement
 
@@ -1021,7 +1021,7 @@ class OlavesRobot(sr.Robot):
             logger.error(
                 f"[move_to_marker] Marker {marker_id} not found. Aborting turn."
             )
-            return
+            raise Exception("MarkerNotFound")
 
         init_dist = marker.position.distance / 1000.0  # Convert mm to meters
 
@@ -1031,8 +1031,6 @@ class OlavesRobot(sr.Robot):
         logger.debug(
             f"[move_to_marker] | Initial Distance Error: {dist_error:.3f} m, Initial Angle Error: {angle_error:.3f} rad"
         )
-
-        # TODO: Tune PIDContollers for the real competition
 
         iterations = 0
         consecutive_lost_frames = 0
@@ -1077,15 +1075,19 @@ class OlavesRobot(sr.Robot):
             # Update marker information
             marker = self.get_marker_by_id(marker_id)
             if not marker:
-                logger.warning(
-                    f"[move_to_marker] | Lost marker {marker_id}. Conducting search."
-                )
-                consecutive_lost_frames += 1
                 if consecutive_lost_frames >= max_lost_frames:
                     logger.error(
                         "[move_to_marker] | Marker lost too many times, aborting."
                     )
                     break
+                if dist_error <= 2 * DIST_TOLERANCE:
+                    # Assume the marker is most likely collected already
+                    break
+                logger.warning(
+                    f"[move_to_marker] | Lost marker {marker_id}. Conducting search."
+                )
+                consecutive_lost_frames += 1
+
                 continue
             else:
                 consecutive_lost_frames = 0
@@ -1282,23 +1284,21 @@ class OlavesRobot(sr.Robot):
             RuntimeError: If the servo or power board fails to engage.
         """
         logger.info(f"[pick_hold_box]: Picking up box.")
-        try:
-            # Sets the lifter to the lowest position
-            self.servo_board.servos[0].position = -1
 
-            logger.debug("Servo positioned to pick up the box.")
+        self.stepperuino_write(data="++++++++")
+        self.sleep(2)
 
-            distance = self.arduino.ultrasound_measure(2, 3) * 1e-3
-            logger.debug(f"Measured distance: {distance} meters.")
+        self.stepperuino_write(data="d")
+        self.sleep(2)
 
-            # Activates vacuum pump
-            self.power_board.outputs["OUT_H0"].is_enabled = True
+        self.stepperuino_write(data="--------")
+        self.sleep(2)
 
-            # Raises lifter to highest position
-            self.servo_board.servos[0].position = 1
-        except Exception as e:
-            logger.error(f"Failed to pick up and hold the box: {e}")
-            raise RuntimeError("Box pickup failed.") from e
+        self.stepperuino_write(data="u")
+        self.sleep(2)
 
-    def release_box(self):
-        self.power_board.outputs["OUT_H0"].is_enabled = False
+    def drop_box(self):
+        self.stepperuino_write(data="++++++++")
+
+    def stepperuino_write(self, data: str) -> None:
+        self.raw_serial_devices["43439353536351815121"].write(data.encode())

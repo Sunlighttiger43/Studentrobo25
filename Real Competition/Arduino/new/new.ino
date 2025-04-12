@@ -433,10 +433,10 @@ void loop()
             TestRot();
             break;
         case 'u':
-            RaiseArm(100);
+            RaiseArm(3750);
             break;
         case 'd':
-            LowerArm(100);
+            LowerArm(3750);
             break;
         case 't':
             Serial.print("Hello, the arduino is on");
