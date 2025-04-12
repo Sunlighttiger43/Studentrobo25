@@ -39,13 +39,13 @@ def run_robot():
     """
 
     configure_logging()
-    r._move(2.575)
-    r.pick_hold_box()
-    r._move(0.3)
-    r._turn(pi/2)
-    r._move(2.875)
-    r.drop_box()
-    
+    #r._move(2.575)
+    #r.pick_hold_box()
+    #r._move(0.3)
+    #r._turn(pi/2)
+    #r._move(2.875)
+    #r.drop_box()
+    r._move(1)
 
 
 run_robot()
