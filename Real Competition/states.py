@@ -9,11 +9,13 @@ import math
 
 # Creating a logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Creating handlers
-console = logging.StreamHandler().setLevel(logging.INFO)
-# file = logging.FileHandler(filename="states.log").setLevel(logging.DEBUG)
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+# file = logging.FileHandler(filename="robot.log")
+# file.setLevel(logging.DEBUG)
 
 # Adding handlers to logger
 logger.addHandler(console)
@@ -220,11 +222,11 @@ class Hunting(State):
         Returns:
             Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
         """
-        
-        #JUST MOVING
+
+        # JUST MOVING
         self.robot._smart_move(1)
 
-        #check our visible markers and find which
+        # check our visible markers and find which
         our_markers = self.get_our_markers()
         closest_marker_id = self.which_marker(our_markers)
 
@@ -246,23 +248,27 @@ class Hunting(State):
                 baseID = self.robot.get_marker_by_id(self.robot.zone_base()).id
                 self.robot.move_to_marker(baseID)
                 self.robot.drop_box()
-                #change closest marker id
-                closest_marker_id = self.robot.get_marker_by_idrange(self.robot.zone_pallets()).id 
+                # change closest marker id
+                closest_marker_id = self.robot.get_marker_by_idrange(
+                    self.robot.zone_pallets()
+                ).id
         else:
             for i in range(3):
                 logger.info(f"Moving to closest marker ID: {closest_marker_id}")
                 self.robot.move_to_marker(closest_marker_id)
                 self.robot.pick_hold_box()
-                #change closest marker id
-                closest_marker_id = self.robot.get_marker_by_idrange(self.robot.zone_pallets()).id
+                # change closest marker id
+                closest_marker_id = self.robot.get_marker_by_idrange(
+                    self.robot.zone_pallets()
+                ).id
 
             our_hirise_id = self.robot.zone_hirise()
             centre_id = 199
             # TODO: need logic on which area to drop the box
-            #raise cage
+            # raise cage
             self.robot.move_to_marker(our_hirise_id)
 
-            #temporary code to take boxes to corner square
+            # temporary code to take boxes to corner square
             baseID = self.robot.get_marker_by_id(self.robot.zone_base()).id
             self.robot.move_to_marker(baseID)
             self.robot.drop_box()
@@ -270,7 +276,8 @@ class Hunting(State):
         # TODO: prevent idling at end of match by returning to home marker
         return MainLoop(self.robot)
 
-#probably unused
+
+# probably unused
 class Knocking(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
