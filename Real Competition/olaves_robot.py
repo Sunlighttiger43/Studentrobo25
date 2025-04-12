@@ -65,7 +65,8 @@ class OlavesRobot(sr.Robot):
         # We will load any external PID tunings here and initialise controllers for them
         # This allows for continuity between different testing runs
         self._initialise_PID_controllers()
-        self.arduino = self.arduinos["7523031383335171D121"]
+
+        self.hardward_initialisation()
 
     def _load_pid_tunings_from_file(self) -> dict:
         """
@@ -1329,20 +1330,36 @@ class OlavesRobot(sr.Robot):
         """
         logger.info(f"[pick_hold_box]: Picking up box.")
 
-        self.stepperuino_write(data="++++++++")
-        self.sleep(2)
+        for i in range(8):
+            self.stepperuino_write(data="+")
+        self.sleep(1)
 
         self.stepperuino_write(data="d")
-        self.sleep(2)
+        self.sleep(1)
 
-        self.stepperuino_write(data="--------")
-        self.sleep(2)
+        for i in range(8):
+            self.stepperuino_write(data="-")
+        self.sleep(1)
 
         self.stepperuino_write(data="u")
-        self.sleep(2)
+        self.sleep(1)
 
     def drop_box(self):
-        self.stepperuino_write(data="++++++++")
+        for i in range(8):
+            self.stepperuino_write(data="+")
+        self.sleep(1)
+
+        for i in range(8):
+            self.stepperuino_write(data="-")
+        self.sleep(1)
+
+    def hardward_initialisation(self) -> None:
+        self.stepperuino_write(data="u")
+        self.sleep(1)
+
+        for i in range(2):
+            self.stepperuino_write(data="-")
+        self.sleep(1)
 
     def stepperuino_write(self, data: str) -> None:
         self.raw_serial_devices["43439353536351815121"].write(data.encode())
