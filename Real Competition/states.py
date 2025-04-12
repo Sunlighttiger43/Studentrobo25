@@ -59,9 +59,9 @@ class MainLoop(State):
         """
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
-        boxes_left = 6 - self._get_number_of_pallets()
+        boxes_left = 4 - self._get_number_of_pallets()
 
-        if elapsed_time == 150:
+        if elapsed_time >= 150:
             intensity = 3
         elif (
             (boxes_left == 2 and elapsed_time >= 135)
@@ -110,12 +110,9 @@ class MainLoop(State):
         intensity = self._calculate_intensity()
         logger.info(f"Current Intensity: {intensity}")
 
-        if intensity == 1:
+        if intensity <= 2:
             logger.info("Transitioning to Hunting state.")
             return Hunting(self.r)
-        elif intensity == 2:
-            logger.info("Transitioning to Knocking state.")
-            return Knocking(self.r)
         elif intensity == 3:
             logger.info("Intensity threshold reached. Terminating.")
             return None
