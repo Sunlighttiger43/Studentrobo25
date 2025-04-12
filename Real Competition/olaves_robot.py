@@ -400,7 +400,43 @@ class OlavesRobot(sr.Robot):
 
     def get_marker_by_idrange(self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
     ) -> Optional[sr.marker]:
-        pass
+        """
+        Retrieves a marker object by its ID.
+
+        Searches the robot's camera feed for a marker with the specified ID.
+
+        Parameters:
+            marker_id (int): The ID of the marker to search for.
+            search_angle (float): The maximum angle (in radians) to rotate while searching.
+                                Defaults to 2pi (a full rotation).
+            speed (float): The speed at which to rotate the robot.
+
+        Returns:
+            The marker object if found, or None if the marker could not be located.
+        """
+        # Check if the marker is already in view.
+        markers = [m for m in self.camera.see() if m.id in marker_id_list]
+        if markers:
+            marker = sorted(markers, key=lambda x: x.position.distance)[0]
+            return marker
+
+        turned_angle = 0.0
+        # Rotate in increments until we've turned the maximum allowed angle.
+        while turned_angle < search_angle:
+            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+            self._smart_turn(pi / 16)
+            turned_angle += pi / 16
+
+            # Check the camera feed after the turn.
+            markers = [m for m in self.camera.see() if m.id in marker_id_list]
+            if markers:
+                marker = sorted(markers, key=lambda x: x.position.distance)[0]
+                self.power((0.0, 0.0), 0.0)  # Stop the robot.
+                return marker
+
+        # If the search completes without finding the marker, stop the robot.
+        self.power((0.0, 0.0), 0.0)
+        return None
     
 
     def _turn_to_marker(self, marker_id: int) -> None:
@@ -924,6 +960,9 @@ class OlavesRobot(sr.Robot):
 
     def zone_hirise(self):
         return self.hirise_dict[self.zone]
+    
+    def zone_base(self):
+        return 7*(self.zone)
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """

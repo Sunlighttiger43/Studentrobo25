@@ -18,24 +18,20 @@ def configure_logging():
     )
 
 
-# def run_robot():
-#     """
-#     Main entry point for the robot program.
+def run_robot():
+    """
+    Main entry point for the robot program.
 
-#     This function configures logging and then starts the main state machine.
+    This function configures logging and then starts the main state machine.
 
-#     Initial Settings:
-#         - Just above the endstops
-#         - Cage fully open
-#     """
+    Initial Settings:
+        - Just above the endstops
+        - Cage fully open
+    """
 
-#     configure_logging()
-#     # Call main from states
-#     main()
+    configure_logging()
+    # Call main from states
+    main()
 
 
-# run_robot()
-
-r = OlavesRobot()
-
-r.sleep(20)
+run_robot()
