@@ -27,6 +27,7 @@ console.setLevel(logging.DEBUG)
 logger.addHandler(console)
 # logger.addHandler(file)
 
+
 class OlavesRobot(sr.Robot):
     def __init__(self):
         super().__init__(raw_ports=[("43439353536351815121", 115200)])
@@ -64,8 +65,7 @@ class OlavesRobot(sr.Robot):
         # We will load any external PID tunings here and initialise controllers for them
         # This allows for continuity between different testing runs
         self._initialise_PID_controllers()
-        encoderuino = self.arduinos["7523031383335171D121"]
-        stepperuino = self.arduinos["43439353536351815121"]
+        self.arduino = self.arduinos["7523031383335171D121"]
 
     def _load_pid_tunings_from_file(self) -> dict:
         """
@@ -374,26 +374,26 @@ class OlavesRobot(sr.Robot):
             )
             return marker
 
-        logger.info(
-            f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
-        )
+        # logger.info(
+        #     f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
+        # )
 
-        turned_angle = 0.0
-        # Rotate in increments until we've turned the maximum allowed angle.
-        while turned_angle < search_angle:
-            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-            self._smart_turn(pi / 16)
-            turned_angle += pi / 16
+        # turned_angle = 0.0
+        # # Rotate in increments until we've turned the maximum allowed angle.
+        # while turned_angle < search_angle:
+        #     # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+        #     self._smart_turn(pi / 16)
+        #     turned_angle += pi / 16
 
-            # Check the camera feed after the turn.
-            markers = [m for m in self.camera.see() if m.id == marker_id]
-            if markers:
-                marker = sorted(markers, key=lambda x: x.position.distance)[0]
-                logger.info(
-                    f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
-                )
-                self.power((0.0, 0.0), 0.0)  # Stop the robot.
-                return marker
+        #     # Check the camera feed after the turn.
+        #     markers = [m for m in self.camera.see() if m.id == marker_id]
+        #     if markers:
+        #         marker = sorted(markers, key=lambda x: x.position.distance)[0]
+        #         logger.info(
+        #             f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
+        #         )
+        #         self.power((0.0, 0.0), 0.0)  # Stop the robot.
+        #         return marker
 
         # If the search completes without finding the marker, stop the robot.
         self.power((0.0, 0.0), 0.0)
@@ -442,7 +442,9 @@ class OlavesRobot(sr.Robot):
             # Calculate PID corrections
             angle_correction = self.isolated_angle_pid.getCorrection(angle_error)
 
-            logger.debug(f"[_turn_to_marker] | Angle Correction: {angle_correction:.3f}")
+            logger.debug(
+                f"[_turn_to_marker] | Angle Correction: {angle_correction:.3f}"
+            )
 
             # Convert corrections into left/right motor power
             left_power = -angle_correction
@@ -856,7 +858,9 @@ class OlavesRobot(sr.Robot):
         Returns:
             (float, float): Adjusted (left, right) motor powers.
         """
-        logger.debug(f"[_apply_min_power] Checking power is greater than {min_power}. Left Power: {left}, Right Power: {right}")
+        logger.debug(
+            f"[_apply_min_power] Checking power is greater than {min_power}. Left Power: {left}, Right Power: {right}"
+        )
 
         def apply_min(val):
             # If turning on the spot (opposite signs), don't forcibly push them in same direction
@@ -871,8 +875,16 @@ class OlavesRobot(sr.Robot):
         if left * right < 0:
             # turning case
             turning_min = min_power
-            left_adj = -turning_min if (left < 0 and left > turning_min) else (turning_min if (left > 0 and left < turning_min) else left)
-            right_adj = -turning_min if (right < 0 and right > turning_min) else (turning_min if (right > 0 and right < turning_min) else right)
+            left_adj = (
+                -turning_min
+                if (left < 0 and left > turning_min)
+                else (turning_min if (left > 0 and left < turning_min) else left)
+            )
+            right_adj = (
+                -turning_min
+                if (right < 0 and right > turning_min)
+                else (turning_min if (right > 0 and right < turning_min) else right)
+            )
 
             return (left_adj, right_adj)
         else:
@@ -908,7 +920,7 @@ class OlavesRobot(sr.Robot):
     def zone_pallets(self) -> List[sr.marker]:
         logger.info(f"[zone_pallets] | Retrieving zone {self.zone} ids")
         return self.pallet_dict[self.zone]
-    
+
     def zone_hirise(self):
         return self.hirise_dict[self.zone]
 
@@ -1078,7 +1090,7 @@ class OlavesRobot(sr.Robot):
             else:
                 consecutive_lost_frames = 0
                 angle_error = marker.position.horizontal_angle
-                dist_error = marker.position.distance/ 1000.0
+                dist_error = marker.position.distance / 1000.0
                 logger.debug(
                     f"[move_to_marker] Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error} rads."
                 )
@@ -1086,7 +1098,6 @@ class OlavesRobot(sr.Robot):
             iterations += 1
 
         self.power((0.0, 0.0), 0.0)
-
 
     def _move_to_marker_finalisation(self) -> None:
         """
