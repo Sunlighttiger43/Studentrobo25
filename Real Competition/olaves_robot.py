@@ -378,7 +378,7 @@ class OlavesRobot(sr.Robot):
         # Rotate in increments until we've turned the maximum allowed angle.
         while turned_angle < search_angle:
             # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-            self._smart_turn(pi / 16)
+            self._turn(pi / 16)
             turned_angle += pi / 16
 
             # Check the camera feed after the turn.
@@ -388,7 +388,7 @@ class OlavesRobot(sr.Robot):
                 logger.info(
                     f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
                 )
-                self.power((0.0, 0.0), 0.0)  # Stop the robot.
+                self.power((0.0, 0.0), 0.3)  # Stop the robot.
                 return marker
 
         # If the search completes without finding the marker, stop the robot.
@@ -398,7 +398,8 @@ class OlavesRobot(sr.Robot):
         )
         return None
 
-    def get_marker_by_idrange(self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
+    def get_marker_by_idrange(
+        self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
     ) -> Optional[sr.marker]:
         """
         Retrieves a marker object by its ID.
@@ -424,7 +425,7 @@ class OlavesRobot(sr.Robot):
         # Rotate in increments until we've turned the maximum allowed angle.
         while turned_angle < search_angle:
             # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-            self._smart_turn(pi / 16)
+            self._turn(pi / 16)
             turned_angle += pi / 16
 
             # Check the camera feed after the turn.
@@ -437,7 +438,6 @@ class OlavesRobot(sr.Robot):
         # If the search completes without finding the marker, stop the robot.
         self.power((0.0, 0.0), 0.0)
         return None
-    
 
     def _turn_to_marker(self, marker_id: int) -> None:
         """
@@ -960,9 +960,9 @@ class OlavesRobot(sr.Robot):
 
     def zone_hirise(self):
         return self.hirise_dict[self.zone]
-    
+
     def zone_base(self):
-        return 7*(self.zone)
+        return 7 * (self.zone)
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """
@@ -1345,6 +1345,7 @@ class OlavesRobot(sr.Robot):
         self.sleep(1)
 
     def drop_box(self):
+        logger.info(f"[drop_box]: Dropping box.")
         for i in range(8):
             self.stepperuino_write(data="+")
         self.sleep(1)
@@ -1354,6 +1355,10 @@ class OlavesRobot(sr.Robot):
         self.sleep(1)
 
     def hardward_initialisation(self) -> None:
+        logger.info("Hardware Initialisation")
+        self.stepperuino_write(data="@")
+        self.sleep(1)
+
         self.stepperuino_write(data="u")
         self.sleep(1)
 

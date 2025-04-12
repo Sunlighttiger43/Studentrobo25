@@ -1,6 +1,5 @@
 from math import pi
 import numpy as np
-import robot
 
 zone_coords = {
     0: [
@@ -140,43 +139,3 @@ zone_coords = {
         (0.718, 0.000, -pi / 2),
     ],
 }
-
-
-#quadrant it is a variable from 0 to 3 marking which quadrant the robot starts in
-#quadrant 0 = top left
-#quadrant 1 = top right
-#quadrant 2 = bottom right
-#quadrant 3 = bottom left
-
-
-
-quadrant = robot.zone
-if quadrant == 0:
-    reflection_matrix = np.array([[-1,0],[0,1]]) #top left
-elif quadrant == 1:
-    reflection_matrix = np.array([[1,0],[0,1]]) #top right
-elif quadrant == 2:
-    reflection_matrix = np.array([[1,0],[0,-1]]) #bottom right
-elif quadrant == 3:
-    reflection_matrix = np.array([[0,-1],[-1,0]]) #bottom left
-
-
-#all the coordinates of places where the boxes should be placed within
-coordinates = np.array([
-    [0,0],
-    [225,0],
-    [0,225],
-    [225,225],
-    [425,425],
-    [425,1075],
-    [1075,425],
-    [1075,1075],
-    [1175,1175],
-    [1175,1925],
-    [1925,1175],
-    [1925,1925]
-
-])
-
-reflected_coordinates = coordinates @ reflection_matrix
-print(reflected_coordinates)
