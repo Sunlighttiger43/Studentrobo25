@@ -78,7 +78,7 @@ class MainLoop(State):
         """
 
         logger.debug(
-            f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})"
+            f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallets: {number_of_pallets})"
         )
         return intensity
 
@@ -138,7 +138,7 @@ class Hunting(State):
         markers = self.r.camera.see()
         our_markers = []
         for marker in markers:
-            if marker in self.get_our_markers():
+            if marker.id in self.r.zone_pallets():
                 our_markers.append((marker.id, marker.position.distance))
         logger.debug(f"Our markers: {our_markers}")
         if our_markers == []:
@@ -242,6 +242,7 @@ class Hunting(State):
         self.robot.move_pos([0, 0])
         self.robot.drop_box()
 
+        # TODO: prevent idling at end of match by returning to home marker
         return MainLoop(self.robot)
 
 
