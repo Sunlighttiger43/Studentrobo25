@@ -115,7 +115,7 @@ class MainLoop(State):
             return Hunting(self.r)
         elif intensity == 3:
             logger.info("Intensity threshold reached. Terminating.")
-            return None
+            return Hunting(self.r)
 
 
 class Hunting(State):
