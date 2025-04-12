@@ -13,7 +13,7 @@ from states import main
 from olaves_robot import OlavesRobot
 from math import pi
 
-#r = OlavesRobot()
+r = OlavesRobot()
 
 def configure_logging():
     """
@@ -41,7 +41,12 @@ def run_robot():
 
     configure_logging()
     main()
-    #r.move_to_marker(195)
+    r._move(2.575)
+    r.pick_hold_box()
+    r._move(0.3)
+    r._turn(pi/2)
+    r._move(2.875)
+    r.drop_box()
     
 
 
