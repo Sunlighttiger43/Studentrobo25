@@ -4,8 +4,6 @@ import logging
 from states import main
 from olaves_robot import OlavesRobot
 
-r = OlavesRobot()
-
 
 def configure_logging():
     """
@@ -20,16 +18,24 @@ def configure_logging():
     )
 
 
-def run_robot():
-    """
-    Main entry point for the robot program.
+# def run_robot():
+#     """
+#     Main entry point for the robot program.
 
-    This function configures logging and then starts the main state machine.
-    """
+#     This function configures logging and then starts the main state machine.
 
-    configure_logging()
-    # Call main from states
-    r.move_pos((0, 1))
- 
+#     Initial Settings:
+#         - Just above the endstops
+#         - Cage fully open
+#     """
 
-run_robot()
+#     configure_logging()
+#     # Call main from states
+#     main()
+
+
+# run_robot()
+
+r = OlavesRobot()
+
+r.sleep(20)
