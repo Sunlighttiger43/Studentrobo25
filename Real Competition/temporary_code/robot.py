@@ -9,7 +9,6 @@ This involves move_to_marker, pick_hold_box, drop_box and get_marker_by_id
 
 
 import logging
-from states import main
 from olaves_robot import OlavesRobot
 from math import pi
 
@@ -40,7 +39,6 @@ def run_robot():
     """
 
     configure_logging()
-    main()
     r._move(2.575)
     r.pick_hold_box()
     r._move(0.3)
