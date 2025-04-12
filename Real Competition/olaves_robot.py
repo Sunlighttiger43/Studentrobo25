@@ -304,13 +304,11 @@ class OlavesRobot(sr.Robot):
         """
         DIST_TO_TIME = 5
         direction = "forward" if distance > 0 else "backward"
-        logger.info(f"[_move] | Moving {direction} by {abs(distance)} meters.")
 
         if distance > 0:
             self.power((0.4, 0.4), distance * DIST_TO_TIME)
         else:
             self.power((-0.4, -0.4), abs(distance) * DIST_TO_TIME)
-        logger.debug(f"[_move] | Completed move {direction}.")
 
     def _smart_turn(self, angle: float) -> None:
         """
@@ -398,6 +396,8 @@ class OlavesRobot(sr.Robot):
         )
         return None
 
+    def get_marker_by_idrange(
+        self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
     def get_marker_by_idrange(
         self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
     ) -> Optional[sr.marker]:
@@ -955,11 +955,11 @@ class OlavesRobot(sr.Robot):
         return wheels  # Assuming no correction needed in simulation
 
     def zone_pallets(self) -> List[sr.marker]:
-        logger.info(f"[zone_pallets] | Retrieving zone {self.zone} ids")
         return self.pallet_dict[self.zone]
 
     def zone_hirise(self):
         return self.hirise_dict[self.zone]
+
 
     def zone_base(self):
         return 7 * (self.zone)
@@ -1066,7 +1066,8 @@ class OlavesRobot(sr.Robot):
             logger.error(
                 f"[move_to_marker] Marker {marker_id} not found. Aborting turn."
             )
-            raise Exception("MarkerNotFound")
+            # raise Exception("MarkerNotFound")
+            return
 
         init_dist = marker.position.distance / 1000.0  # Convert mm to meters
 
@@ -1079,7 +1080,7 @@ class OlavesRobot(sr.Robot):
 
         iterations = 0
         consecutive_lost_frames = 0
-        max_lost_frames = 5
+        max_lost_frames = 2
 
         while (
             (dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE)
@@ -1125,14 +1126,13 @@ class OlavesRobot(sr.Robot):
                         "[move_to_marker] | Marker lost too many times, aborting."
                     )
                     break
-                if dist_error <= 2 * DIST_TOLERANCE:
+                if dist_error <= 5 * DIST_TOLERANCE:
                     # Assume the marker is most likely collected already
                     break
                 logger.warning(
                     f"[move_to_marker] | Lost marker {marker_id}. Conducting search."
                 )
                 consecutive_lost_frames += 1
-
                 continue
             else:
                 consecutive_lost_frames = 0
@@ -1332,39 +1332,47 @@ class OlavesRobot(sr.Robot):
 
         for i in range(8):
             self.stepperuino_write(data="+")
-        self.sleep(1)
+        self.sleep(3)
 
         self.stepperuino_write(data="d")
-        self.sleep(1)
+        self.sleep(3)
 
         for i in range(8):
             self.stepperuino_write(data="-")
-        self.sleep(1)
+        self.sleep(3)
 
         self.stepperuino_write(data="u")
-        self.sleep(1)
+        self.sleep(3)
 
     def drop_box(self):
         logger.info(f"[drop_box]: Dropping box.")
         for i in range(8):
             self.stepperuino_write(data="+")
-        self.sleep(1)
+        self.sleep(3)
 
-        for i in range(8):
-            self.stepperuino_write(data="-")
-        self.sleep(1)
+    def hardward_initialisation(self) -> None:
+        try:
+            logger.info("Hardware Initialisation")
+            self.stepperuino_write(data="d")
+            self.sleep(3)
+
+            for i in range(8):
+                self.stepperuino_write(data="+")
+            self.sleep(3)
 
     def hardward_initialisation(self) -> None:
         logger.info("Hardware Initialisation")
         self.stepperuino_write(data="@")
-        self.sleep(1)
+        self.sleep(3)
 
         self.stepperuino_write(data="u")
-        self.sleep(1)
+        self.sleep(3)
 
-        for i in range(2):
-            self.stepperuino_write(data="-")
-        self.sleep(1)
+            for i in range(8):
+                self.stepperuino_write(data="-")
+            self.sleep(3)
+        except:
+            logger.warning("[olavesRobot - hardward_initialisation] Error during hardward_initialisation. (Except-branch of try-except statement)")
 
     def stepperuino_write(self, data: str) -> None:
         self.raw_serial_devices["43439353536351815121"].write(data.encode())
