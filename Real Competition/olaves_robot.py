@@ -46,6 +46,13 @@ class OlavesRobot(sr.Robot):
             3: list(i for i in range(160, 180)),
         }
 
+        self.hirise_dict = {
+            0: 195,
+            1: 196,
+            2: 197,
+            3: 198,
+        }
+
         # Might prove helpful to distinguish between physical robot and simulated robot
         # for testing
         self.is_physical_robot = True
@@ -367,26 +374,26 @@ class OlavesRobot(sr.Robot):
             )
             return marker
 
-        # logger.info(
-        #     f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
-        # )
+        logger.info(
+            f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
+        )
 
-        # turned_angle = 0.0
-        # # Rotate in increments until we've turned the maximum allowed angle.
-        # while turned_angle < search_angle:
-        #     # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-        #     self._smart_turn(pi / 16)
-        #     turned_angle += pi / 16
+        turned_angle = 0.0
+        # Rotate in increments until we've turned the maximum allowed angle.
+        while turned_angle < search_angle:
+            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+            self._smart_turn(pi / 16)
+            turned_angle += pi / 16
 
-        #     # Check the camera feed after the turn.
-        #     markers = [m for m in self.camera.see() if m.id == marker_id]
-        #     if markers:
-        #         marker = sorted(markers, key=lambda x: x.position.distance)[0]
-        #         logger.info(
-        #             f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
-        #         )
-        #         self.power((0.0, 0.0), 0.0)  # Stop the robot.
-        #         return marker
+            # Check the camera feed after the turn.
+            markers = [m for m in self.camera.see() if m.id == marker_id]
+            if markers:
+                marker = sorted(markers, key=lambda x: x.position.distance)[0]
+                logger.info(
+                    f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
+                )
+                self.power((0.0, 0.0), 0.0)  # Stop the robot.
+                return marker
 
         # If the search completes without finding the marker, stop the robot.
         self.power((0.0, 0.0), 0.0)
@@ -901,6 +908,9 @@ class OlavesRobot(sr.Robot):
     def zone_pallets(self) -> List[sr.marker]:
         logger.info(f"[zone_pallets] | Retrieving zone {self.zone} ids")
         return self.pallet_dict[self.zone]
+    
+    def zone_hirise(self):
+        return self.hirise_dict[self.zone]
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """

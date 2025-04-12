@@ -238,6 +238,7 @@ class Hunting(State):
         logger.info(f"Moving to closest marker ID: {closest_marker_id}")
         self.robot.move_to_marker(closest_marker_id)
         self.robot.pick_hold_box()
+        our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
         self.robot.move_pos([0, 0])
         self.robot.drop_box()
@@ -245,7 +246,7 @@ class Hunting(State):
         # TODO: prevent idling at end of match by returning to home marker
         return MainLoop(self.robot)
 
-
+#probably unused
 class Knocking(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
