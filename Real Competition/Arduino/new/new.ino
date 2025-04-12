@@ -438,6 +438,9 @@ void loop()
         case 'd':
             LowerArm(3750);
             break;
+        case '@':
+            LowerArm(200);
+            break;
         case 't':
             Serial.print("Hello, the arduino is on");
             break;
