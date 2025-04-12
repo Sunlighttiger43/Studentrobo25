@@ -40,11 +40,16 @@ def run_robot():
     a = 0.76923
 
     configure_logging()
-    r._move(2.45*a)
+    r._move(2/a)
     r.pick_hold_box()
-    r._move(0.3*a)
+    r._turn(-pi/2)
+    r._move(0.4/a)
+    r.drop_box()
+    r.pick_hold_box()
+    r._turn(-pi/2)
+    r._move(0.45/a)
     r._turn(pi/2)
-    r._move(2.875*a)
+    r._move(1.2/a)
     r.drop_box()
 
 
