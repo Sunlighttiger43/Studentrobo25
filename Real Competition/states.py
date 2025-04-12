@@ -221,6 +221,7 @@ class Hunting(State):
             Optional[State]: The next state after completing hunting (will be the mainloop), or None to terminate.
         """
 
+        #check our visible markers and find which
         our_markers = self.get_our_markers()
         closest_marker_id = self.which_marker(our_markers)
 
@@ -235,9 +236,17 @@ class Hunting(State):
         logger.info(f"Moving to closest marker ID: {closest_marker_id}")
         self.robot.move_to_marker(closest_marker_id)
         self.robot.pick_hold_box()
+        #only drop off boxes once 3 pallets have been picked up
+        
+        #after picking up our first pallet
+        #turning until we see second marker
+        #get id of the second marker
+        #move to second marker
+        #repeat for third
+        
         our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
-        self.robot.move_pos([0, 0])
+
         self.robot.drop_box()
 
         # TODO: prevent idling at end of match by returning to home marker
