@@ -240,10 +240,11 @@ class Hunting(State):
         
         #after picking up our first pallet
         #turning until we see second marker
+        
         #get id of the second marker
         #move to second marker
         #repeat for third
-        
+
         our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
 
