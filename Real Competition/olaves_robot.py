@@ -57,9 +57,7 @@ class OlavesRobot(sr.Robot):
         # We will load any external PID tunings here and initialise controllers for them
         # This allows for continuity between different testing runs
         self._initialise_PID_controllers()
-        arduino = self.arduinos["Arduino1"]
-        my_servo_board = self.servo_board
-        my_power_board = self.power_board
+        self.arduino = self.arduinos["7523031383335171D121"]
 
     def _load_pid_tunings_from_file(self) -> dict:
         """
@@ -368,26 +366,26 @@ class OlavesRobot(sr.Robot):
             )
             return marker
 
-        logger.info(
-            f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
-        )
+        # logger.info(
+        #     f"[get_marker_by_id] Marker {marker_id} not visible initially. Initiating search..."
+        # )
 
-        turned_angle = 0.0
-        # Rotate in increments until we've turned the maximum allowed angle.
-        while turned_angle < search_angle:
-            # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
-            self._smart_turn(pi / 16)
-            turned_angle += pi / 16
+        # turned_angle = 0.0
+        # # Rotate in increments until we've turned the maximum allowed angle.
+        # while turned_angle < search_angle:
+        #     # Rotate the robot slightly; adjust the time (0.5 seconds here) as needed.
+        #     self._smart_turn(pi / 16)
+        #     turned_angle += pi / 16
 
-            # Check the camera feed after the turn.
-            markers = [m for m in self.camera.see() if m.id == marker_id]
-            if markers:
-                marker = sorted(markers, key=lambda x: x.position.distance)[0]
-                logger.info(
-                    f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
-                )
-                self.power((0.0, 0.0), 0.0)  # Stop the robot.
-                return marker
+        #     # Check the camera feed after the turn.
+        #     markers = [m for m in self.camera.see() if m.id == marker_id]
+        #     if markers:
+        #         marker = sorted(markers, key=lambda x: x.position.distance)[0]
+        #         logger.info(
+        #             f"[get_marker_by_id] Marker {marker_id} found after turning {turned_angle:.2f} radians."
+        #         )
+        #         self.power((0.0, 0.0), 0.0)  # Stop the robot.
+        #         return marker
 
         # If the search completes without finding the marker, stop the robot.
         self.power((0.0, 0.0), 0.0)
@@ -442,10 +440,10 @@ class OlavesRobot(sr.Robot):
             left_power = -angle_correction
             right_power = +angle_correction
 
-            # Apply scaling with minimum power
-            left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.05, center=0
-            )
+            # # Apply scaling with minimum power
+            # left_power, right_power = self._scale(
+            #     left_power, right_power, min_power=0.05, center=0
+            # )
 
             logger.debug(
                 f"[move_to_marker] | Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
@@ -454,8 +452,8 @@ class OlavesRobot(sr.Robot):
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
             time_step = min(
-                max((angle_error / init_angle) * ANGLE_TO_TIME, 0.1 * ANGLE_TO_TIME),
                 ANGLE_TO_TIME,
+                max((init_angle - angle_error) * ANGLE_TO_TIME, ANGLE_TO_TIME * 0.1),
             )
 
             # Apply motor power
@@ -1237,17 +1235,19 @@ class OlavesRobot(sr.Robot):
 
         # This method uses two of the markers and uses a predetermined formula with proof already figured out
         marker = sorted(visible_known_markers, key=lambda x: x.position.distance)[0]
-        #Let a = first marker x position, b = first marker y position, c = second marker x position, d = second marker y position
+        # Let a = first marker x position, b = first marker y position, c = second marker x position, d = second marker y position
         a, b, c, d = marker[0][1], marker[0][2], marker[1][1], marker[1][2]
-        #Let theta and alpha also be angles for first marker and second marker respectively - need to check if MARKER ID IS THIRD POSITION
-        theta, alpha = marker.orientation.yaw(marker[0][0]), marker.orientation.yaw(marker[1][0])
+        # Let theta and alpha also be angles for first marker and second marker respectively - need to check if MARKER ID IS THIRD POSITION
+        theta, alpha = marker.orientation.yaw(marker[0][0]), marker.orientation.yaw(
+            marker[1][0]
+        )
 
-        x = ((math.tan(theta)*a) + b - a + (math.tan(alpha)*c))/((math.tan(theta)) + (math.tan(alpha)))
-        y = math.tan(theta)*x - math.tan(theta) * a + b
-        #Coordinates returned back - this was proved GEOMETRICALLY, See AARIT for Proof
-        return (x,y)
-
-
+        x = ((math.tan(theta) * a) + b - a + (math.tan(alpha) * c)) / (
+            (math.tan(theta)) + (math.tan(alpha))
+        )
+        y = math.tan(theta) * x - math.tan(theta) * a + b
+        # Coordinates returned back - this was proved GEOMETRICALLY, See AARIT for Proof
+        return (x, y)
 
     def pick_hold_box(self):
         """
