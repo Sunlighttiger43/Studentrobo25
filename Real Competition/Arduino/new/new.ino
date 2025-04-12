@@ -49,7 +49,7 @@ void setup()
     // encoderInit(); // Initialise the encoder pins
     stepperInit(); // Initialise the stepper motor pins
     endStopInit(); // Initialise the end stop pins
-    Seriail.begin(SERIAL_BAUD);
+    Serial.begin(SERIAL_BAUD);
 }
 
 void endStopInit()
