@@ -237,6 +237,9 @@ class Hunting(State):
             logger.info(f"Moving to closest marker ID: {closest_marker_id}")
             self.robot.move_to_marker(closest_marker_id)
             self.robot.pick_hold_box()
+            #change closest marker id
+            closest_marker_id = self.robot.get_marker_by_idrange(self.robot.zone_pallets()).id
+
         #only drop off boxes once 3 pallets have been picked up
         
         #after picking up our first pallet
@@ -249,6 +252,9 @@ class Hunting(State):
         our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
 
+        #temporary code to take boxes to corner square
+        baseID = self.robot.get_marker_by_id(self.robot.zone_base()).id
+        self.robot.move_to_marker(baseID)
         self.robot.drop_box()
 
         # TODO: prevent idling at end of match by returning to home marker

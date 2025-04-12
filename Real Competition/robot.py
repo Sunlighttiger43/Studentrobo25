@@ -4,8 +4,6 @@ import logging
 from states import main
 from olaves_robot import OlavesRobot
 
-r = OlavesRobot()
-
 
 def configure_logging():
     """
@@ -29,7 +27,7 @@ def run_robot():
 
     configure_logging()
     # Call main from states
-    r.move_pos((0, 1))
- 
+    main()
+
 
 run_robot()
