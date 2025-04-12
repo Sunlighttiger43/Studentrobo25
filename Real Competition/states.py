@@ -233,17 +233,19 @@ class Hunting(State):
             # TODO: Might be wise to add some fallback here, like turning and checking for
             # markers on the spot for a full rotation before returning to main loop
 
-        logger.info(f"Moving to closest marker ID: {closest_marker_id}")
-        self.robot.move_to_marker(closest_marker_id)
-        self.robot.pick_hold_box()
+        for i in range(3):
+            logger.info(f"Moving to closest marker ID: {closest_marker_id}")
+            self.robot.move_to_marker(closest_marker_id)
+            self.robot.pick_hold_box()
         #only drop off boxes once 3 pallets have been picked up
         
         #after picking up our first pallet
         #turning until we see second marker
+        
         #get id of the second marker
         #move to second marker
         #repeat for third
-        
+
         our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
 

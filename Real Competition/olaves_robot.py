@@ -398,6 +398,11 @@ class OlavesRobot(sr.Robot):
         )
         return None
 
+    def get_marker_by_idrange(self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
+    ) -> Optional[sr.marker]:
+        pass
+    
+
     def _turn_to_marker(self, marker_id: int) -> None:
         """
         Re-orients the robot to face towards a specified marker.
