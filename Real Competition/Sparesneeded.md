@@ -9,7 +9,8 @@ what we need as spares
 - filament for 3d printer
 - screws of all sizes
 - MDF
-
+- spirit level
+- cardboard - for additions to the robot
 
 
 

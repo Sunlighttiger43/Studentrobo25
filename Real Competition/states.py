@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from olaves_robot import OlavesRobot
 
 import logging
+import math
 
 # Creating a logger
 logger = logging.getLogger(__name__)
@@ -12,11 +13,11 @@ logger.setLevel(logging.INFO)
 
 # Creating handlers
 console = logging.StreamHandler().setLevel(logging.INFO)
-file = logging.FileHandler(filename="states.log").setLevel(logging.DEBUG)
+# file = logging.FileHandler(filename="states.log").setLevel(logging.DEBUG)
 
 # Adding handlers to logger
 logger.addHandler(console)
-logger.addHandler(file)
+# logger.addHandler(file)
 
 
 class State(ABC):
@@ -45,7 +46,7 @@ class MainLoop(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
 
-    '''def _calculate_intensity(self) -> int:
+    def _calculate_intensity(self) -> int:
         """
         Calculates the current intensity based on time elapsed and number of pallets.
 
@@ -55,7 +56,7 @@ class MainLoop(State):
         Notes:
             - Intensity increases over time and with the number of pallets.
             - This function can be extended to include more factors influencing intensity.
-        
+        """
         elapsed_time = self.r.get_comp_time()
         number_of_pallets = self._get_number_of_pallets()
         boxes_left = 6 - self._get_number_of_pallets()
@@ -70,28 +71,16 @@ class MainLoop(State):
             intensity = 2
         elif boxes_left >= 2:
             intensity = 1
-        
+        """
         we remoddelled the intensity so that it will keep hunting until 2 boxes 
         it will switch to the knocking state if we have 15 seconds left with 2 boxes or 1 box left with 10 seconds or we have 0 boxes left
         if the time_elapsed is past the total round time, it will switch to sleep state
         """
-        elapsed_time=self.r.get_comp_time()
-        remaining_time=150-elapsed_time
-        if remaining_time<=20:
-            self.move_pos((0,-7.5))
-            self.lift()
-            self._move(0.15)
-        if remaining_time<=3:
-            self.open()
-            self.open()
-            self._move(-0.5)
-
 
         logger.debug(
-            f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallettes: {number_of_pallets})"
+            f"Calculated intensity: {intensity} (Elapsed Time: {elapsed_time}, Pallets: {number_of_pallets})"
         )
         return intensity
-        '''
 
     def _get_number_of_pallets(self) -> int:
         """
@@ -120,22 +109,16 @@ class MainLoop(State):
 
         intensity = self._calculate_intensity()
         logger.info(f"Current Intensity: {intensity}")
-        
-        elapsed_time=self.r.get_comp_time()
-        remaining_time=150-elapsed_time
-        if remaining_time<=20:
-            self.robot.move_pos((0,-7.5))
-            self.robot.lift()
-            self.robot._move(0.15)
-        if remaining_time<=3:
-            self.robot.open()
-            self.robot.open()
-            self.robot._move(-0.5)
-        if remaining_time==0:
-            return None
-        logger.info("Transitioning to Hunting state.")
-        return Hunting(self.r)
 
+        if intensity == 1:
+            logger.info("Transitioning to Hunting state.")
+            return Hunting(self.r)
+        elif intensity == 2:
+            logger.info("Transitioning to Knocking state.")
+            return Knocking(self.r)
+        elif intensity == 3:
+            logger.info("Intensity threshold reached. Terminating.")
+            return None
 
 
 class Hunting(State):
@@ -155,7 +138,7 @@ class Hunting(State):
         markers = self.r.camera.see()
         our_markers = []
         for marker in markers:
-            if marker in self.get_our_markers():
+            if marker.id in self.r.zone_pallets():
                 our_markers.append((marker.id, marker.position.distance))
         logger.debug(f"Our markers: {our_markers}")
         if our_markers == []:
@@ -163,35 +146,6 @@ class Hunting(State):
             return self.get_our_markers()
         else:
             return our_markers
-
-    def decide_marker_placement(self):
-        self.total_towers = 0
-        """
-        Calculates where to put the next marker
-        assumed that we have all six boxes
- 
-        Plan:
-         - first collect all 6 boxes (depending on the time from testing)
-         - once enough boxes are collected, while storing them in the robot, head to other towers to knock them down
-         - in the last 10 seconds head to the centre and deposit them safely, releasing them at the last second to decrease the chance of it falling
- 
-        main logic:
-        - keep trace of muber of towers wer have made
-          if we see more than the number of towers we have made, a box has fallen
-          find the box that has fallen(furthest from area centre) and place in next area
-        """
-        self.robot.move_pos(0, 0)
-        self.robot.release_box()
-        self.total_towers += 1
-        visible_pallets = self.robot.detect_highrise_pallets()
-        floor_pallets = visible_pallets[1]
-        if self.total_towers < floor_pallets:
-            furthest_marker = []
-            our_markers = self.get_our_markers()
-            for marker in our_markers:
-                if self.get_marker_pos(marker[0]):
-                    "finish checking if the marker is not in the centre area, removes all in the area"
-                    pass
 
     def judgement_of_distances(self, our_markers: List[Tuple[int, float]]) -> int:
         """
@@ -284,28 +238,15 @@ class Hunting(State):
         logger.info(f"Moving to closest marker ID: {closest_marker_id}")
         self.robot.move_to_marker(closest_marker_id)
         self.robot.pick_hold_box()
+        our_hirise_id = self.robot.zone_hirise()
         # TODO: need logic on which area to drop the box
-        self.robot.move_pos(0, 0)
+        self.robot.move_pos([0, 0])
         self.robot.drop_box()
-        
-        markers=self.get_our_markers()
-        for i in range(len(markers)):
-            self.move_to_marker(markers[i])
-            self.lift
-            self._move(0.2)
-            self.open()
-            self.lower()
-            self.close()
-        return Knocking()
 
-        """ this gets a list of our markers, moves to each of them, lifts each of them and stores it inside the robot     
-        """
+        # TODO: prevent idling at end of match by returning to home marker
+        return MainLoop(self.robot)
 
-
-        
-
-     
-
+#probably unused
 class Knocking(State):
     def __init__(self, robot: OlavesRobot):
         super().__init__(robot)
@@ -313,7 +254,7 @@ class Knocking(State):
 
     def enemy_boxes(self):
         """
-        Here I am trying to identify which enemy boxes it can see, which are on high rises
+        Here I am trying to identify which enemy boxes it can see which are on high rises
         :return: list[enemy_boxes]
         """
         print(f"Returning list of enemy markers")

@@ -15,11 +15,11 @@ import os
 
 # Creating a logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Creating handlers
 console = logging.StreamHandler()
-console.setLevel(logging.INFO)
+console.setLevel(logging.DEBUG)
 # file = logging.FileHandler(filename="robot.log")
 # file.setLevel(logging.DEBUG)
 
@@ -30,7 +30,8 @@ logger.addHandler(console)
 
 class OlavesRobot(sr.Robot):
     def __init__(self):
-        super().__init__()
+        super().__init__(raw_ports=[("43439353536351815121", 115200)])
+        print(self.arduinos.keys())
         logger.info("Initialising OlavesRobot")
         self.init_time: float = time()
         self._position: np.ndarray = [0, 0, 0]  # x, y, theta
@@ -44,6 +45,13 @@ class OlavesRobot(sr.Robot):
             1: list(i for i in range(120, 140)),
             2: list(i for i in range(140, 160)),
             3: list(i for i in range(160, 180)),
+        }
+
+        self.hirise_dict = {
+            0: 195,
+            1: 196,
+            2: 197,
+            3: 198,
         }
 
         # Might prove helpful to distinguish between physical robot and simulated robot
@@ -394,7 +402,7 @@ class OlavesRobot(sr.Robot):
         )
         return None
 
-    def _turn_to_marker(self, target_marker_id: int) -> None:
+    def _turn_to_marker(self, marker_id: int) -> None:
         """
         Re-orients the robot to face towards a specified marker.
 
@@ -403,28 +411,28 @@ class OlavesRobot(sr.Robot):
         Assumes that the robot is positioned directly in front of the marker.
 
         Parameters:
-            target_marker_id (int): The unique identifier of the target marker.
+            marker_id (int): The unique identifier of the target marker.
 
         Raises:
             NotImplementedError: This method is intentionally unimplemented for the virtual league.
         """
-        logger.info(f"[_turn_to_marker] | Turning to marker with id {target_marker_id}")
+        logger.info(f"[_turn_to_marker] | Turning to marker with id {marker_id}")
 
         ANGLE_TOLERANCE = 0.05
-        ANGLE_TO_TIME = 0.05
+        ANGLE_TO_TIME = 0.1
 
         # Use the get_marker_by_id function to get the initial marker object.
-        marker = self.get_marker_by_id(target_marker_id)
+        marker = self.get_marker_by_id(marker_id)
         if not marker:
             logger.error(
-                f"[_turn_to_marker] Marker {target_marker_id} not found. Aborting turn."
+                f"[_turn_to_marker] Marker {marker_id} not found. Aborting turn."
             )
             return
 
         init_angle = marker.position.horizontal_angle
         angle_error = init_angle
 
-        logger.debug(f"[move_to_marker] | Initial Angle Error: {angle_error:.3f} rad")
+        logger.debug(f"[_turn_to_marker] | Initial Angle Error: {angle_error:.3f} rad")
 
         iterations = 0
         consecutive_lost_frames = 0
@@ -434,36 +442,38 @@ class OlavesRobot(sr.Robot):
             # Calculate PID corrections
             angle_correction = self.isolated_angle_pid.getCorrection(angle_error)
 
-            logger.debug(f"[move_to_marker] | Angle Correction: {angle_correction:.3f}")
+            logger.debug(
+                f"[_turn_to_marker] | Angle Correction: {angle_correction:.3f}"
+            )
 
             # Convert corrections into left/right motor power
             left_power = -angle_correction
             right_power = +angle_correction
 
-            # # Apply scaling with minimum power
-            # left_power, right_power = self._scale(
-            #     left_power, right_power, min_power=0.05, center=0
-            # )
+            # Apply scaling with minimum power
+            left_power, right_power = self._scale(
+                left_power, right_power, min_power=0.1, center=0
+            )
 
             logger.debug(
-                f"[move_to_marker] | Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
+                f"[_turn_to_marker] | Left Power: {left_power:.3f}, Right Power: {right_power:.3f}"
             )
 
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
             time_step = min(
                 ANGLE_TO_TIME,
-                max((init_angle - angle_error) * ANGLE_TO_TIME, ANGLE_TO_TIME * 0.1),
+                max((init_angle - angle_error) * ANGLE_TO_TIME, ANGLE_TO_TIME * 0.25),
             )
 
             # Apply motor power
             self.power((left_power, right_power), time_step, off=False)
 
             # Update marker information
-            marker = self.get_marker_by_id(target_marker_id)
+            marker = self.get_marker_by_id(marker_id)
             if not marker:
                 logger.warning(
-                    f"[_turn_to_marker] | Lost marker {target_marker_id}. Conducting search."
+                    f"[_turn_to_marker] | Lost marker {marker_id}. Conducting search."
                 )
                 consecutive_lost_frames += 1
                 if consecutive_lost_frames >= max_lost_frames:
@@ -482,7 +492,7 @@ class OlavesRobot(sr.Robot):
             angle_error = marker.position.horizontal_angle
 
             logger.debug(
-                f"[move_to_marker] | Updated Angle Error: {angle_error:.3f} rad"
+                f"[_turn_to_marker] | Updated Angle Error: {angle_error:.3f} rad"
             )
 
             iterations += 1
@@ -799,7 +809,7 @@ class OlavesRobot(sr.Robot):
             ValueError: If `min_power` is negative or exceeds motor power limits.
         """
         logger.info(
-            f"[_scale] | Scaling motor powers around {center}, with a max spread of {max_std}"
+            f"[_scale] | Scaling motor powers around {center}, with a max spread of {max_std}. Left Power: {left}, Right Power: {right}"
         )
         if min_power < 0 or min_power > 1.0:
             logger.error(
@@ -807,23 +817,23 @@ class OlavesRobot(sr.Robot):
             )
             raise ValueError("min_power must be between 0 and 1.")
 
-        # Compute mean
-        mu = (left + right) / 2.0
+        # # # Compute mean
+        # # mu = (left + right) / 2.0
 
-        # Compute population standard deviation for two points
-        sd = sqrt(((left - mu) ** 2 + (right - mu) ** 2) / 2.0)
+        # # # Compute population standard deviation for two points
+        # # sd = sqrt(((left - mu) ** 2 + (right - mu) ** 2) / 2.0)
 
-        # Scale down if std exceeds max_std
-        if sd > max_std and sd > 1e-9:
-            scale_factor = max_std / sd
-            left = mu + scale_factor * (left - mu)
-            right = mu + scale_factor * (right - mu)
+        # # # Scale down if std exceeds max_std
+        # # if sd > max_std and sd > 1e-9:
+        # #     scale_factor = max_std / sd
+        # #     left = mu + scale_factor * (left - mu)
+        # #     right = mu + scale_factor * (right - mu)
 
-        # # Shift mean to center
-        # new_mu = (left + right) / 2.0
-        # shift = center - new_mu
-        # left += shift
-        # right += shift
+        # # # Shift mean to center
+        # # new_mu = (left + right) / 2.0
+        # # shift = center - new_mu
+        # # left += shift
+        # # right += shift
 
         # Apply minimum power threshold
         left, right = self._apply_min_power(left, right, min_power)
@@ -848,6 +858,9 @@ class OlavesRobot(sr.Robot):
         Returns:
             (float, float): Adjusted (left, right) motor powers.
         """
+        logger.debug(
+            f"[_apply_min_power] Checking power is greater than {min_power}. Left Power: {left}, Right Power: {right}"
+        )
 
         def apply_min(val):
             # If turning on the spot (opposite signs), don't forcibly push them in same direction
@@ -861,9 +874,18 @@ class OlavesRobot(sr.Robot):
         # We'll apply a smaller threshold so it can spin in place:
         if left * right < 0:
             # turning case
-            turning_min = 0.05
-            left_adj = -turning_min if left < 0 else (turning_min if left > 0 else 0)
-            right_adj = -turning_min if right < 0 else (turning_min if right > 0 else 0)
+            turning_min = min_power
+            left_adj = (
+                -turning_min
+                if (left < 0 and left > turning_min)
+                else (turning_min if (left > 0 and left < turning_min) else left)
+            )
+            right_adj = (
+                -turning_min
+                if (right < 0 and right > turning_min)
+                else (turning_min if (right > 0 and right < turning_min) else right)
+            )
+
             return (left_adj, right_adj)
         else:
             # normal forward/back
@@ -898,6 +920,9 @@ class OlavesRobot(sr.Robot):
     def zone_pallets(self) -> List[sr.marker]:
         logger.info(f"[zone_pallets] | Retrieving zone {self.zone} ids")
         return self.pallet_dict[self.zone]
+
+    def zone_hirise(self):
+        return self.hirise_dict[self.zone]
 
     def get_marker_type(self, marker: Union[sr.marker, int]) -> Optional[str]:
         """
@@ -987,8 +1012,8 @@ class OlavesRobot(sr.Robot):
         """
         logger.info(f"[move_to_marker] | Moving to Marker: {marker_id}")
 
-        DIST_TOLERANCE = 0.15  # meters
-        ANGLE_TOLERANCE = 0.1  # radians
+        DIST_TOLERANCE = 0.4  # meters
+        ANGLE_TOLERANCE = 0.05  # radians
         DIST_TO_TIME = 0.05  # Base duration for movement
 
         marker = self.get_marker_by_id(marker_id=marker_id)
@@ -1010,13 +1035,13 @@ class OlavesRobot(sr.Robot):
         # TODO: Tune PIDContollers for the real competition
 
         iterations = 0
-        lost_counter = 0
+        consecutive_lost_frames = 0
         max_lost_frames = 5
 
         while (
             (dist_error > DIST_TOLERANCE or abs(angle_error) > ANGLE_TOLERANCE)
             and iterations < 1000
-            and lost_counter < max_lost_frames
+            and consecutive_lost_frames < max_lost_frames
         ):
             # Calculate PID corrections
             dist_correction = -self.move_dist_pid.getCorrection(dist_error)
@@ -1032,7 +1057,7 @@ class OlavesRobot(sr.Robot):
 
             # Apply scaling with minimum power
             left_power, right_power = self._scale(
-                left_power, right_power, min_power=0.05
+                left_power, right_power, min_power=0.15
             )
 
             logger.debug(
@@ -1042,42 +1067,37 @@ class OlavesRobot(sr.Robot):
             # Determine dynamic time_step based on distance error
             # This can help in smoother control as the robot approaches the target
             time_step = min(
-                max((dist_error / init_dist) * DIST_TO_TIME, 0.1 * DIST_TO_TIME),
                 DIST_TO_TIME,
+                max((init_dist - dist_error) * DIST_TO_TIME, DIST_TO_TIME * 0.25),
             )
 
             # Apply motor power
             self.power((left_power, right_power), time_step, off=False)
 
-            marker = self.get_marker_by_id(marker_id=marker_id)
+            # Update marker information
+            marker = self.get_marker_by_id(marker_id)
             if not marker:
-                logger.warning("[move_to_marker] | Marker lost during approach.")
-                lost_counter += 1
-                # Possibly do a short search or continue (continue seems easier to implement at 3AM)
+                logger.warning(
+                    f"[move_to_marker] | Lost marker {marker_id}. Conducting search."
+                )
+                consecutive_lost_frames += 1
+                if consecutive_lost_frames >= max_lost_frames:
+                    logger.error(
+                        "[move_to_marker] | Marker lost too many times, aborting."
+                    )
+                    break
                 continue
             else:
-                lost_counter = 0
-                dist_error = marker.position.distance / 1000.0
+                consecutive_lost_frames = 0
                 angle_error = marker.position.horizontal_angle
+                dist_error = marker.position.distance / 1000.0
+                logger.debug(
+                    f"[move_to_marker] Updated Distance Error: {dist_error:.3f} m, Updated Angle Error: {angle_error} rads."
+                )
 
             iterations += 1
 
         self.power((0.0, 0.0), 0.0)
-
-        # If we've lost it but are within ultrasonic range:
-        if lost_counter >= max_lost_frames:
-            logger.info(
-                "[move_to_marker] | Marker lost too many times, finalising with ultrasound approach if possible."
-            )
-            # NOTE: Will need to check docs for ultrasound in actual physical robot
-            if self.arduino.ultrasound_measure(2, 3) < (DIST_TOLERANCE * 1000):
-                self._move_to_marker_finalisation()
-            else:
-                logger.error(
-                    "[move_to_marker] | Marker not in close vicinity. Aborting approach."
-                )
-        else:
-            logger.debug("[move_to_marker] | Marker Reached or threshold met.")
 
     def _move_to_marker_finalisation(self) -> None:
         """
