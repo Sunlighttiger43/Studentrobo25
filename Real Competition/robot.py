@@ -1,9 +1,19 @@
 # robot.py
+"""
+We will now test the main low level functions for our robot.
+This involves move_to_marker, pick_hold_box, drop_box and get_marker_by_id
+
+- First test involves simply searching for the box, and picking it up, just to drop it quickly after
+- You can then test it without the box initially in sight
+"""
+
 
 import logging
 from states import main
 from olaves_robot import OlavesRobot
+from math import pi
 
+#r = OlavesRobot()
 
 def configure_logging():
     """
@@ -30,8 +40,9 @@ def run_robot():
     """
 
     configure_logging()
-    # Call main from states
     main()
+    #r.move_to_marker(195)
+    
 
 
 run_robot()
