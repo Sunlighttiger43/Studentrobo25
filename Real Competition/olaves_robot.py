@@ -1367,7 +1367,7 @@ class OlavesRobot(sr.Robot):
                 self.stepperuino_write(data="-")
             self.sleep(3)
         except:
-            logger.warning("Error during hardward_initialisation. (Except-branch of try-except statement)")
+            logger.warning("[olavesRobot - hardward_initialisation] Error during hardward_initialisation. (Except-branch of try-except statement)")
 
     def stepperuino_write(self, data: str) -> None:
         self.raw_serial_devices["43439353536351815121"].write(data.encode())
