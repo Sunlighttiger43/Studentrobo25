@@ -37,15 +37,16 @@ def run_robot():
         - Just above the endstops
         - Cage fully open
     """
+    a = 0.76923
 
     configure_logging()
-    #r._move(2.575)
-    #r.pick_hold_box()
-    #r._move(0.3)
-    #r._turn(pi/2)
-    #r._move(2.875)
-    #r.drop_box()
-    r._move(1)
+    r._move(2.45*a)
+    r.pick_hold_box()
+    r._move(0.3*a)
+    r._turn(pi/2)
+    r._move(2.875*a)
+    r.drop_box()
+
 
 
 run_robot()
