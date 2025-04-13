@@ -356,6 +356,7 @@ class OlavesRobot(sr.Robot):
         Returns:
             The marker object if found, or None if the marker could not be located.
         """
+        #MARK: GETMARKERBYID
         logger.info(
             f"[get_marker_by_id] | Retrieving marker object for marker with id {marker_id}"
         )
@@ -413,6 +414,7 @@ class OlavesRobot(sr.Robot):
         Returns:
             The marker object if found, or None if the marker could not be located.
         """
+        #MARK: IDRANGE
         # Check if the marker is already in view.
         markers = [m for m in self.camera.see() if m.id in marker_id_list]
         if markers:
@@ -1056,6 +1058,7 @@ class OlavesRobot(sr.Robot):
         Raises:
             "MarkerNotFound" : Exception when the specified marker is not found by the robot
         """
+        #MARK: MOVE TO MARKER
         logger.info(f"[move_to_marker] | Moving to Marker: {marker_id}")
 
         DIST_TOLERANCE = 0.1  # meters
@@ -1345,6 +1348,7 @@ class OlavesRobot(sr.Robot):
         Raises:
             RuntimeError: If the servo or power board fails to engage.
         """
+        #MARK: PICK HOLD BOX
         logger.info(f"[pick_hold_box]: Picking up box.")
 
         for i in range(8):

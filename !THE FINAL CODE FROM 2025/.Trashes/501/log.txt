@@ -1,0 +1,10 @@
+[0:00:00] ---
+[0:00:00] Student Robotics OS 2025.0.0
+[0:00:00] Is there something you'd like us to add to the kit or API? 💡
+[0:00:00] Perhaps there's something you think we should improve? 🛠️
+[0:00:00] Let us know your feedback about your experience using our kit at https://studentrobotics.org/kit-feedback 🗣️
+[0:00:00] ---
+[0:00:00] === LOG STARTED ===
+[0:00:01.119007] INFO:sr.robot3.robot:sr.robot3 version 2025.0.1
+[0:00:01.732091] INFO:sr.robot3.serial_wrapper:Connected to board Power Board v4: sr0KU2T
+[0:00:01.736730] INFO:sr.robot3.serial_wrapper:Connected to board MCV4B: SR0GDN

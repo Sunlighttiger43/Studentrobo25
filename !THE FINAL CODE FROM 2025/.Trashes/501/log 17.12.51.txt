@@ -1,0 +1,724 @@
+[0:00:00] ---
+[0:00:00] Student Robotics OS 2025.0.0
+[0:00:00] Is there something you'd like us to add to the kit or API? 💡
+[0:00:00] Perhaps there's something you think we should improve? 🛠️
+[0:00:00] Let us know your feedback about your experience using our kit at https://studentrobotics.org/kit-feedback 🗣️
+[0:00:00] ---
+[0:00:00] === LOG STARTED ===
+[0:00:00.764240] sr.robot3.robot - INFO - sr.robot3 version 2025.0.1
+[0:00:00.839793] sr.robot3.serial_wrapper - INFO - Connected to board Power Board v4: sr0KU2T
+[0:00:00.859558] sr.robot3.serial_wrapper - INFO - Connected to board MCV4B: SR0GDN
+[0:00:02.887818] sr.robot3.serial_wrapper - INFO - Connected to board Ruggeduino: 7523031383335171D121
+[0:00:03.515312] sr.robot3.robot - INFO - Found PowerBoard, serial: sr0KU2T
+[0:00:03.524188] sr.robot3.robot - INFO - Found MotorBoard, serial: SR0GDN
+[0:00:03.533110] sr.robot3.robot - INFO - Found Arduino, serial: 7523031383335171D121
+[0:00:03.541991] sr.robot3.robot - INFO - Waiting for start button.
+[0:00:03.550804] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.559643] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.568505] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.577366] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.586250] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.595133] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.604061] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.612914] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.621824] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.630667] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.644164] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.653155] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.700820] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.710001] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.801565] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.810620] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.902252] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.911343] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.002978] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.012023] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.103679] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.112733] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.204370] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.213432] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.305089] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.314170] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.405776] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.414838] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.506443] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.515484] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.607128] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.616162] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.707857] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.716980] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.808523] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.817630] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.909228] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.918293] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.009986] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.019126] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.110699] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.119804] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.211412] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.220516] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.312105] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.321223] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.412880] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.422011] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.513769] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.528970] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.614939] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.623955] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.715710] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.724735] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.816430] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.825488] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.917197] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.926238] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.017967] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.026995] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.118649] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.127640] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.219329] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.228329] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.320057] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.329117] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.420845] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.429904] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.521600] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.530588] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.622326] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.631267] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.723035] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.732091] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.823776] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.832741] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.924526] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.933534] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.025364] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.034405] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.126070] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.135017] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.226814] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.235801] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.327529] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.336547] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.428248] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.437256] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.528932] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.537956] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.629681] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.638722] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.730404] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.739410] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.831142] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.840137] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.931854] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.940887] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.034059] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.044310] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.135864] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.145859] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.237388] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.247413] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.338854] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.348868] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.440282] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.450349] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.541760] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.551705] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.643226] [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.653285] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:08.744616] sr.robot3.robot - INFO - Start signal received; continuing.
+[0:00:08.762543] Initialising OlavesRobot
+[0:00:08.772231] [_load_pid_tunings_from_file] | Loaded PID tunings.
+[0:00:08.781982] [move_pos] | Moving to position (0, 1).
+[0:00:08.791665] [_encoder_pos] | Calculating location using encoders
+[0:00:08.801448] Calculating position from encoder ticks.
+[0:00:08.811154] olaves_robot - INFO - Initialising OlavesRobot
+[0:00:08.820677] olaves_robot - INFO - [_load_pid_tunings_from_file] | Loaded PID tunings.
+[0:00:08.830218] olaves_robot - INFO - [move_pos] | Moving to position (0, 1).
+[0:00:08.839757] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:08.849312] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:08.896466] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:08.906466] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:08.916898] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:08.926393] [sleep] | Sleeping for 0.5 seconds.
+[0:00:08.935830] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:08.945307] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:09.403830] [_encoder_pos] | Calculating location using encoders
+[0:00:09.591111] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:09.601746] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:09.611999] Calculating position from encoder ticks.
+[0:00:09.626036] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.636095] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.646093] [sleep] | Sleeping for 0.5 seconds.
+[0:00:09.656118] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.665649] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.675046] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:10.105636] [_encoder_pos] | Calculating location using encoders
+[0:00:10.696643] Calculating position from encoder ticks.
+[0:00:10.706725] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:10.716722] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:10.728281] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:10.738350] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:10.748293] [sleep] | Sleeping for 0.5 seconds.
+[0:00:10.758333] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:10.768264] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:10.778285] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:10.804834] [_encoder_pos] | Calculating location using encoders
+[0:00:10.814832] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:10.824617] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:10.834198] Calculating position from encoder ticks.
+[0:00:10.998127] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:11.008549] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:11.019538] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:11.029753] [sleep] | Sleeping for 0.5 seconds.
+[0:00:11.039848] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:11.049908] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:11.506051] [_encoder_pos] | Calculating location using encoders
+[0:00:11.702312] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:11.712813] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:11.722939] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:11.732888] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:11.751181] Calculating position from encoder ticks.
+[0:00:11.760927] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:11.770635] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:11.783910] [sleep] | Sleeping for 0.5 seconds.
+[0:00:11.793700] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:12.206370] [_encoder_pos] | Calculating location using encoders
+[0:00:12.810867] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:12.821235] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:12.831164] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:12.841065] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:12.850931] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:12.860771] Calculating position from encoder ticks.
+[0:00:12.870656] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:12.880455] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:12.890321] [sleep] | Sleeping for 0.5 seconds.
+[0:00:12.914747] [_encoder_pos] | Calculating location using encoders
+[0:00:12.924213] Calculating position from encoder ticks.
+[0:00:12.933651] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:12.942986] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:13.098943] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:13.108786] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:13.119390] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:13.129103] [sleep] | Sleeping for 0.5 seconds.
+[0:00:13.138786] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:13.148368] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:13.606055] [_encoder_pos] | Calculating location using encoders
+[0:00:13.795063] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:13.805335] Calculating position from encoder ticks.
+[0:00:13.816062] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:13.825802] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:13.835503] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:13.848111] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:13.858060] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:13.867625] [sleep] | Sleeping for 0.5 seconds.
+[0:00:13.878214] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:14.308922] [_encoder_pos] | Calculating location using encoders
+[0:00:14.916033] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:14.927120] Calculating position from encoder ticks.
+[0:00:14.937782] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:14.948244] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:14.958806] [sleep] | Sleeping for 0.5 seconds.
+[0:00:14.970281] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:14.980940] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:14.991738] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:15.001409] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:15.021542] [_encoder_pos] | Calculating location using encoders
+[0:00:15.031559] Calculating position from encoder ticks.
+[0:00:15.041245] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:15.050806] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:15.201394] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:15.211577] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:15.228133] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:15.238211] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:15.249992] [sleep] | Sleeping for 0.5 seconds.
+[0:00:15.260008] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:15.708018] [_encoder_pos] | Calculating location using encoders
+[0:00:15.913685] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:15.924019] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:15.934043] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:15.944046] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:15.954000] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:15.963951] Calculating position from encoder ticks.
+[0:00:15.973958] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:15.983574] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:15.993104] [sleep] | Sleeping for 0.5 seconds.
+[0:00:16.409097] [_encoder_pos] | Calculating location using encoders
+[0:00:17.012332] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:17.022767] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:17.032783] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:17.042905] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:17.052897] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:17.062919] Calculating position from encoder ticks.
+[0:00:17.072826] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:17.082956] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:17.092911] [sleep] | Sleeping for 0.5 seconds.
+[0:00:17.115452] [_encoder_pos] | Calculating location using encoders
+[0:00:17.570372] Calculating position from encoder ticks.
+[0:00:17.580405] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:17.590475] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:17.605607] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:17.615651] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:17.625492] [sleep] | Sleeping for 0.5 seconds.
+[0:00:17.635097] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:17.644654] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:17.654205] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:17.808750] [_encoder_pos] | Calculating location using encoders
+[0:00:17.818799] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:17.828681] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:17.838740] Calculating position from encoder ticks.
+[0:00:18.002005] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:18.012008] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:18.022054] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:18.031697] [sleep] | Sleeping for 0.5 seconds.
+[0:00:18.042125] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:18.051995] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:18.509183] [_encoder_pos] | Calculating location using encoders
+[0:00:19.088824] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:19.098906] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:19.109398] Calculating position from encoder ticks.
+[0:00:19.119434] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:19.129497] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:19.145840] [sleep] | Sleeping for 0.5 seconds.
+[0:00:19.156816] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:19.166885] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:19.176458] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:19.210154] [_encoder_pos] | Calculating location using encoders
+[0:00:19.220166] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:19.230121] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:19.239652] Calculating position from encoder ticks.
+[0:00:19.403747] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:19.414100] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:19.425140] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:19.435172] [sleep] | Sleeping for 0.5 seconds.
+[0:00:19.445140] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:19.455037] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:19.911442] [_encoder_pos] | Calculating location using encoders
+[0:00:20.104625] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:20.115156] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:20.125219] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:20.135212] Calculating position from encoder ticks.
+[0:00:20.145817] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:20.159666] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:20.169739] [sleep] | Sleeping for 0.5 seconds.
+[0:00:20.179355] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:20.188850] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:20.612777] [_encoder_pos] | Calculating location using encoders
+[0:00:21.221791] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:21.232108] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:21.242108] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:21.251993] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:21.261896] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:21.271773] Calculating position from encoder ticks.
+[0:00:21.281718] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:21.291564] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:21.301601] [sleep] | Sleeping for 0.5 seconds.
+[0:00:21.319004] [_encoder_pos] | Calculating location using encoders
+[0:00:21.328600] Calculating position from encoder ticks.
+[0:00:21.338130] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:21.347553] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:21.503813] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:21.513730] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:21.524333] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:21.534118] [sleep] | Sleeping for 0.5 seconds.
+[0:00:21.543808] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:21.553537] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:22.011185] [_encoder_pos] | Calculating location using encoders
+[0:00:22.205586] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:22.216097] Calculating position from encoder ticks.
+[0:00:22.226145] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:22.236061] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:22.247037] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:22.263391] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:22.273067] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:22.282572] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:22.294445] [sleep] | Sleeping for 0.5 seconds.
+[0:00:22.708966] [_encoder_pos] | Calculating location using encoders
+[0:00:23.317221] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:23.327605] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:23.337564] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:23.347359] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:23.357403] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:23.367314] Calculating position from encoder ticks.
+[0:00:23.377280] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:23.387229] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:23.397183] [sleep] | Sleeping for 0.5 seconds.
+[0:00:23.419527] [_encoder_pos] | Calculating location using encoders
+[0:00:23.429201] Calculating position from encoder ticks.
+[0:00:23.438763] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:23.448355] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:23.601363] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:23.611226] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:23.622239] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:23.632219] [sleep] | Sleeping for 0.5 seconds.
+[0:00:23.642264] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:23.652180] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:24.108513] [_encoder_pos] | Calculating location using encoders
+[0:00:24.306013] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:24.316538] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:24.326608] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:24.336584] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:24.346649] Calculating position from encoder ticks.
+[0:00:24.356571] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:24.366590] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:24.379852] [sleep] | Sleeping for 0.5 seconds.
+[0:00:24.389733] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:24.810213] [_encoder_pos] | Calculating location using encoders
+[0:00:25.423200] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:25.433652] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:25.443716] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:25.453776] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:25.463732] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:25.473850] Calculating position from encoder ticks.
+[0:00:25.483865] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:25.493901] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:25.503886] [sleep] | Sleeping for 0.5 seconds.
+[0:00:25.521475] [_encoder_pos] | Calculating location using encoders
+[0:00:25.531216] Calculating position from encoder ticks.
+[0:00:25.540851] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:25.550484] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:25.702465] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:25.712765] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:25.723832] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:25.740273] [sleep] | Sleeping for 0.5 seconds.
+[0:00:25.750237] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:25.760091] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:26.210182] [_encoder_pos] | Calculating location using encoders
+[0:00:26.406770] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:26.417218] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:26.427170] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:26.437061] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:26.446980] Calculating position from encoder ticks.
+[0:00:26.456786] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:26.466753] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:26.479417] [sleep] | Sleeping for 0.5 seconds.
+[0:00:26.489093] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:26.911366] [_encoder_pos] | Calculating location using encoders
+[0:00:27.507758] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:27.518085] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:27.528096] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:27.538098] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:27.547974] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:27.557983] Calculating position from encoder ticks.
+[0:00:27.567859] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:27.577850] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:27.587746] [sleep] | Sleeping for 0.5 seconds.
+[0:00:27.612508] [_encoder_pos] | Calculating location using encoders
+[0:00:27.622116] Calculating position from encoder ticks.
+[0:00:27.631555] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:27.640897] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:27.803861] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:27.814129] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:27.825136] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:27.835050] [sleep] | Sleeping for 0.5 seconds.
+[0:00:27.845062] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:27.855025] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:28.311534] [_encoder_pos] | Calculating location using encoders
+[0:00:28.507341] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:28.517980] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:28.527903] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:28.537843] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:28.547932] Calculating position from encoder ticks.
+[0:00:28.557879] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:28.568013] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:28.581604] [sleep] | Sleeping for 0.5 seconds.
+[0:00:28.591274] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:29.012637] [_encoder_pos] | Calculating location using encoders
+[0:00:29.624284] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:29.634605] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:29.644580] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:29.654612] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:29.664547] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:29.680998] Calculating position from encoder ticks.
+[0:00:29.690971] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:29.700825] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:29.710464] [sleep] | Sleeping for 0.5 seconds.
+[0:00:29.727796] [_encoder_pos] | Calculating location using encoders
+[0:00:29.737453] Calculating position from encoder ticks.
+[0:00:29.746992] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:29.756467] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:29.905442] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:29.915831] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:29.926255] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:29.936233] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:29.946260] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:29.956249] [sleep] | Sleeping for 0.5 seconds.
+[0:00:30.412969] [_encoder_pos] | Calculating location using encoders
+[0:00:30.608322] Calculating position from encoder ticks.
+[0:00:30.618552] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:30.628597] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:30.640227] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:30.650323] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:30.660318] [sleep] | Sleeping for 0.5 seconds.
+[0:00:30.670383] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:30.679950] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:30.689470] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:31.114158] [_encoder_pos] | Calculating location using encoders
+[0:00:31.708145] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:31.718572] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:31.728577] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:31.738506] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:31.748464] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:31.758423] Calculating position from encoder ticks.
+[0:00:31.768361] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:31.778411] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:31.788317] [sleep] | Sleeping for 0.5 seconds.
+[0:00:31.813879] [_encoder_pos] | Calculating location using encoders
+[0:00:31.823734] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:31.833586] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:31.843082] Calculating position from encoder ticks.
+[0:00:32.006459] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:32.016782] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:32.027914] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:32.038044] [sleep] | Sleeping for 0.5 seconds.
+[0:00:32.048103] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:32.058226] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:32.514373] [_encoder_pos] | Calculating location using encoders
+[0:00:32.708702] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:32.719263] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:32.729437] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:32.739438] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:32.749556] Calculating position from encoder ticks.
+[0:00:32.759516] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:32.775755] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:32.788933] [sleep] | Sleeping for 0.5 seconds.
+[0:00:32.798764] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:33.215409] [_encoder_pos] | Calculating location using encoders
+[0:00:33.835859] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:33.845905] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:33.856314] Calculating position from encoder ticks.
+[0:00:33.866359] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:33.876346] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:33.886275] [sleep] | Sleeping for 0.5 seconds.
+[0:00:33.897412] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:33.907285] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:33.916938] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:33.938113] [_encoder_pos] | Calculating location using encoders
+[0:00:33.947712] Calculating position from encoder ticks.
+[0:00:33.957330] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:33.966784] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:34.107845] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:34.117663] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:34.128596] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:34.138555] [sleep] | Sleeping for 0.5 seconds.
+[0:00:34.148457] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:34.158312] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:34.615242] [_encoder_pos] | Calculating location using encoders
+[0:00:34.809957] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:34.820432] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:34.830480] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:34.859542] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:34.869643] Calculating position from encoder ticks.
+[0:00:35.305538] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:35.315518] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:35.329671] [sleep] | Sleeping for 0.5 seconds.
+[0:00:35.339710] [_encoder_pos] | Calculating location using encoders
+[0:00:35.349694] Calculating position from encoder ticks.
+[0:00:35.359601] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:35.369557] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:35.379220] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:35.508781] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:35.518583] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:35.528856] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:35.538324] [sleep] | Sleeping for 0.5 seconds.
+[0:00:35.547691] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:35.557113] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:36.016381] [_encoder_pos] | Calculating location using encoders
+[0:00:36.580338] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:36.590777] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:36.600750] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:36.610709] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:36.620527] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:36.630541] Calculating position from encoder ticks.
+[0:00:36.646872] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:36.656749] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:36.666701] [sleep] | Sleeping for 0.5 seconds.
+[0:00:36.716542] [_encoder_pos] | Calculating location using encoders
+[0:00:36.726509] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:36.736328] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:36.745956] Calculating position from encoder ticks.
+[0:00:36.906180] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:36.916733] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:36.927266] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:36.937355] [sleep] | Sleeping for 0.5 seconds.
+[0:00:36.948095] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:36.958166] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:37.413856] [_encoder_pos] | Calculating location using encoders
+[0:00:37.996329] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:38.006780] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:38.016772] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:38.026749] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:38.036710] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:38.046739] Calculating position from encoder ticks.
+[0:00:38.056658] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:38.066591] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:38.076353] [sleep] | Sleeping for 0.5 seconds.
+[0:00:38.113609] [_encoder_pos] | Calculating location using encoders
+[0:00:38.123654] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:38.133647] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:38.143306] Calculating position from encoder ticks.
+[0:00:38.306873] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:38.317381] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:38.328431] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:38.338493] [sleep] | Sleeping for 0.5 seconds.
+[0:00:38.348531] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:38.358569] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:38.814820] [_encoder_pos] | Calculating location using encoders
+[0:00:39.011420] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:39.022125] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:39.032194] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:39.042218] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:39.052282] Calculating position from encoder ticks.
+[0:00:39.062317] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:39.072111] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:39.085642] [sleep] | Sleeping for 0.5 seconds.
+[0:00:39.095597] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:39.515385] [_encoder_pos] | Calculating location using encoders
+[0:00:40.124675] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:40.135199] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:40.145312] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:40.155333] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:40.165381] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:40.175480] Calculating position from encoder ticks.
+[0:00:40.185539] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:40.203667] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:40.213386] [sleep] | Sleeping for 0.5 seconds.
+[0:00:40.230754] [_encoder_pos] | Calculating location using encoders
+[0:00:40.240322] Calculating position from encoder ticks.
+[0:00:40.249872] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:40.259326] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:40.407786] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:40.418248] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:40.428584] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:40.438459] [sleep] | Sleeping for 0.5 seconds.
+[0:00:40.449187] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:40.459121] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:40.914795] [_encoder_pos] | Calculating location using encoders
+[0:00:41.111999] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:41.122510] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:41.132409] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:41.142321] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:41.152245] Calculating position from encoder ticks.
+[0:00:41.162251] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:41.171895] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:41.184517] [sleep] | Sleeping for 0.5 seconds.
+[0:00:41.194143] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:41.616029] [_encoder_pos] | Calculating location using encoders
+[0:00:42.227379] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:42.238439] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:42.248993] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:42.259568] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:42.270120] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:42.280611] Calculating position from encoder ticks.
+[0:00:42.291094] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:42.301630] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:42.311694] [sleep] | Sleeping for 0.5 seconds.
+[0:00:42.328552] [_encoder_pos] | Calculating location using encoders
+[0:00:42.338517] Calculating position from encoder ticks.
+[0:00:42.348372] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:42.358212] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:42.509170] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:42.520269] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:42.531362] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:42.542025] [sleep] | Sleeping for 0.5 seconds.
+[0:00:42.553267] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:42.563872] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:43.017101] [_encoder_pos] | Calculating location using encoders
+[0:00:43.213432] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:43.224290] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:43.235453] Calculating position from encoder ticks.
+[0:00:43.246165] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:43.256711] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:43.268439] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:43.279127] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:43.295509] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:43.307934] [sleep] | Sleeping for 0.5 seconds.
+[0:00:43.718144] [_encoder_pos] | Calculating location using encoders
+[0:00:44.337501] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:44.348145] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:44.359297] Calculating position from encoder ticks.
+[0:00:44.369380] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:44.379432] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:44.389425] [sleep] | Sleeping for 0.5 seconds.
+[0:00:44.400522] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:44.410547] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:44.420572] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:44.439945] [_encoder_pos] | Calculating location using encoders
+[0:00:44.449516] Calculating position from encoder ticks.
+[0:00:44.458970] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:44.468484] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:44.610417] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:44.620142] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:44.631100] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:44.641283] [sleep] | Sleeping for 0.5 seconds.
+[0:00:44.651289] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:44.661375] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:45.117887] [_encoder_pos] | Calculating location using encoders
+[0:00:45.313470] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:45.323577] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:45.334171] Calculating position from encoder ticks.
+[0:00:45.344318] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:45.354444] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:45.365647] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:45.375695] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:45.385341] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:45.397392] [sleep] | Sleeping for 0.5 seconds.
+[0:00:45.819683] [_encoder_pos] | Calculating location using encoders
+[0:00:46.430481] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:46.440853] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:46.450868] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:46.460785] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:46.470828] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:46.480833] Calculating position from encoder ticks.
+[0:00:46.491063] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:46.500995] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:46.511126] [sleep] | Sleeping for 0.5 seconds.
+[0:00:46.528475] [_encoder_pos] | Calculating location using encoders
+[0:00:46.538191] Calculating position from encoder ticks.
+[0:00:46.547665] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:46.557163] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:46.711628] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:46.722081] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:46.733234] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:46.743319] [sleep] | Sleeping for 0.5 seconds.
+[0:00:46.753527] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:46.769956] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:47.219464] [_encoder_pos] | Calculating location using encoders
+[0:00:47.424056] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:47.434622] Calculating position from encoder ticks.
+[0:00:47.444625] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:47.454568] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:47.464511] [sleep] | Sleeping for 0.5 seconds.
+[0:00:47.475426] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:47.485442] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:47.495029] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:47.504466] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:47.920846] [_encoder_pos] | Calculating location using encoders
+[0:00:48.537799] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:48.548237] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:48.558273] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:48.568120] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:48.578166] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:48.588145] Calculating position from encoder ticks.
+[0:00:48.598096] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:48.608041] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:48.618276] [sleep] | Sleeping for 0.5 seconds.
+[0:00:48.635727] [_encoder_pos] | Calculating location using encoders
+[0:00:48.645381] Calculating position from encoder ticks.
+[0:00:48.655071] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:48.664674] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:48.813162] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:48.823163] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:48.833884] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:48.843618] [sleep] | Sleeping for 0.5 seconds.
+[0:00:48.853447] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:48.863159] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:49.320801] [_encoder_pos] | Calculating location using encoders
+[0:00:49.514910] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:49.525612] Calculating position from encoder ticks.
+[0:00:49.535643] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:49.545647] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:49.557169] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:49.567120] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:49.577210] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:49.586824] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:49.599009] [sleep] | Sleeping for 0.5 seconds.

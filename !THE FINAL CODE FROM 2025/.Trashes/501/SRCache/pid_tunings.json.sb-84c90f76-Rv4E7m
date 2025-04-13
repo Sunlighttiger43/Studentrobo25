@@ -1,0 +1,17 @@
+{
+    "isolated_angle_pid_gains": {
+        "p": 1.2,
+        "i": 0.1,
+        "d": 3
+    },
+    "move_pos_dist": {
+        "p": 2,
+        "i": 0.2,
+        "d": 10
+    },
+    "move_pos_angle": {
+        "p": 1.5,
+        "i": 0.1,
+        "d": 3
+    }
+}

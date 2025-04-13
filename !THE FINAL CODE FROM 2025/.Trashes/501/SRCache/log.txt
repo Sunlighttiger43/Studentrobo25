@@ -1,0 +1,144 @@
+[0:00:00] ---
+[0:00:00] Student Robotics OS 2025.0.0
+[0:00:00] Is there something you'd like us to add to the kit or API? 💡
+[0:00:00] Perhaps there's something you think we should improve? 🛠️
+[0:00:00] Let us know your feedback about your experience using our kit at https://studentrobotics.org/kit-feedback 🗣️
+[0:00:00] ---
+[0:00:00] === LOG STARTED ===
+[0:00:00.749494] sr.robot3.robot - INFO - sr.robot3 version 2025.0.1
+[0:00:01.136609] sr.robot3.serial_wrapper - INFO - Connected to board Power Board v4: sr0KU2T
+[0:00:01.145537] sr.robot3.serial_wrapper - INFO - Connected to board MCV4B: SR0GDN
+[0:00:02.874059] sr.robot3.serial_wrapper - INFO - Connected to board Ruggeduino: 7523031383335171D121
+[0:00:03.061115] sr.robot3.robot - INFO - Found PowerBoard, serial: sr0KU2T
+[0:00:03.070556] sr.robot3.robot - INFO - Found MotorBoard, serial: SR0GDN
+[0:00:03.082111] sr.robot3.robot - INFO - Found Arduino, serial: 7523031383335171D121
+[0:00:03.091487] sr.robot3.robot - INFO - Waiting for start button.
+[0:00:03.100352] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.109170] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.184978] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.194090] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.285775] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.294786] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.386475] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.395702] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.487214] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.496445] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.587937] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.597163] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.688711] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.697986] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.789446] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.798670] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.890150] [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.899415] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:03.990831] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.000062] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.091540] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.100789] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.192252] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.201501] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.292969] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.302236] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.393683] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.402918] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.494386] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.503689] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.595091] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.604336] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.695841] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.705151] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.796503] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.805798] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.897236] [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.906520] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:04.997985] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.007267] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.098692] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.107966] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.199446] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.208786] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.300184] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.309519] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.400892] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.410200] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.501634] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.519176] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.602319] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.611548] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.703019] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.712257] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.803722] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.812937] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.904413] [sleep] | Sleeping for 0.1 seconds.
+[0:00:05.913671] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.005127] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.014313] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.105839] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.114984] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.206543] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.215696] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.307234] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.316407] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.407977] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.417177] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.508688] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.517835] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.609429] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.618658] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.710118] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.719301] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.810824] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.820038] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.911522] [sleep] | Sleeping for 0.1 seconds.
+[0:00:06.920733] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.012241] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.021473] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.112929] [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.122251] olaves_robot - INFO - [sleep] | Sleeping for 0.1 seconds.
+[0:00:07.213630] sr.robot3.robot - INFO - Start signal received; continuing.
+[0:00:07.225921] Initialising OlavesRobot
+[0:00:07.234947] [_load_pid_tunings_from_file] | Loaded PID tunings.
+[0:00:07.243870] [move_pos] | Moving to position [0, 1].
+[0:00:07.252765] [_encoder_pos] | Calculating location using encoders
+[0:00:07.261689] Calculating position from encoder ticks.
+[0:00:07.270588] olaves_robot - INFO - Initialising OlavesRobot
+[0:00:07.279468] olaves_robot - INFO - [_load_pid_tunings_from_file] | Loaded PID tunings.
+[0:00:07.288436] olaves_robot - INFO - [move_pos] | Moving to position [0, 1].
+[0:00:07.297354] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:07.306216] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:07.384693] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:07.393983] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:07.403394] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:07.412359] [sleep] | Sleeping for 0.5 seconds.
+[0:00:07.421306] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:07.430218] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:07.890614] [_encoder_pos] | Calculating location using encoders
+[0:00:08.079235] Calculating position from encoder ticks.
+[0:00:08.089727] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:08.099828] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:08.114504] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:08.124585] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:08.134610] [sleep] | Sleeping for 0.5 seconds.
+[0:00:08.144673] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:08.154657] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:08.173006] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:08.590688] [_encoder_pos] | Calculating location using encoders
+[0:00:09.202631] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:09.213450] Calculating position from encoder ticks.
+[0:00:09.223658] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.233843] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.243948] [sleep] | Sleeping for 0.5 seconds.
+[0:00:09.255166] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:09.265456] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.275603] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.285756] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
+[0:00:09.306573] [_encoder_pos] | Calculating location using encoders
+[0:00:09.316497] Calculating position from encoder ticks.
+[0:00:09.326293] olaves_robot - INFO - [_encoder_pos] | Calculating location using encoders
+[0:00:09.335981] olaves_robot - INFO - Calculating position from encoder ticks.
+[0:00:09.486287] [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.496689] olaves_robot - INFO - [_scale] | Scaling motor powers around 2.0, with a max spread of 3
+[0:00:09.507588] _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.517677] [sleep] | Sleeping for 0.5 seconds.
+[0:00:09.527649] olaves_robot - WARNING - _wonky_wheels_correction is not implemented for the virtual league.
+[0:00:09.537580] olaves_robot - INFO - [sleep] | Sleeping for 0.5 seconds.
