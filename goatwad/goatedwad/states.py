@@ -72,7 +72,7 @@ class MainCycle(State):
 
         self.robot.power((-0.5, -0.5), 0.5)
 
-        self._return_to_corner()
+        # self._return_to_corner()
 
         self.pallets_collected += boxes_collected
         logger.info(f"[MainCycle] Total placed so far: {self.pallets_collected}")
@@ -88,7 +88,7 @@ class MainCycle(State):
         )
         boxes_collected = 0
 
-        while boxes_collected < needed:
+        while boxes_collected < needed and self.robot.get_comp_time() < 120:
             chosen_marker = self._search_for_pallet()
             if not chosen_marker:
                 logger.warning("[_collect_pallets] No pallet found after search.")
@@ -110,6 +110,8 @@ class MainCycle(State):
                 f"Picked 1 pallet. So far collected this batch={boxes_collected}."
             )
 
+        if not self.robot.get_comp_time() < 120:
+            self.robot.drop_box()
         return boxes_collected
 
     def _search_for_pallet(self) -> Optional[object]:
@@ -143,7 +145,9 @@ class MainCycle(State):
             self.robot.sleep(0.5)
 
             markers = self.robot.camera.see()
-            logger.debug(f"[_search_for_pallets] Markers seen: {[marker.id for marker in markers]}")
+            logger.debug(
+                f"[_search_for_pallets] Markers seen: {[marker.id for marker in markers]}"
+            )
             pallet_markers = [m for m in markers if m.id in self.robot.zone_pallets()]
             if pallet_markers:
                 pallet_markers.sort(key=lambda x: x.position.distance)
@@ -157,7 +161,7 @@ class MainCycle(State):
         hi_rise_id = self.robot.zone_hirise()
 
         markers = self.robot.camera.see()
-        hi_rise_marker = [m for m in markers if m.id in range(195,200)]
+        hi_rise_marker = [m for m in markers if m.id in range(195, 200)]
         if hi_rise_marker:
             hi_rise_marker.sort(key=lambda x: x.position.distance)
 
@@ -168,8 +172,8 @@ class MainCycle(State):
         turn_increment = math.pi / 64.0
         max_turn = 16 * math.pi
 
-        while total_turned < max_turn and not hi_rise_marker:
-            if total_turned % 5/2 * math.pi == 0:
+        while total_turned < max_turn:
+            if total_turned % 5 / 2 * math.pi == 0:
                 self.robot._move(0.3)
             logger.debug("[_place_pallets] Still no pallet in view")
             self.robot.power((-0.5, 0.5), 0.15)
@@ -178,13 +182,16 @@ class MainCycle(State):
             self.robot.sleep(0.5)
 
             markers = self.robot.camera.see()
-            logger.debug(f"[_place_palletss] Markers seen: {[marker.id for marker in markers]}")
+            logger.debug(
+                f"[_place_palletss] Markers seen: {[marker.id for marker in markers]}"
+            )
             hi_rise_marker = [m for m in markers if m.id in self.robot.zone_pallets()]
             if hi_rise_marker:
                 hi_rise_marker.sort(key=lambda x: x.position.distance)
                 break
 
-        self.robot.move_to_marker(hi_rise_id)
+        self.robot._move(-0.5)
+        self.robot.move_to_marker(hi_rise_marker[0])
         self.robot.drop_box()
 
     def _return_to_corner(self):
