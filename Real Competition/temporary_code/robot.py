@@ -11,7 +11,7 @@ This involves move_to_marker, pick_hold_box, drop_box and get_marker_by_id
 import logging
 from olaves_robot import OlavesRobot
 from math import pi
-
+import time
 r = OlavesRobot()
 
 def configure_logging():
@@ -40,6 +40,7 @@ def run_robot():
     a = 0.76923
 
     configure_logging()
+    #Initial strategy for like guaranteed first few points
     r._move(2/a)
     r.pick_hold_box()
     r._turn(-pi/2)
@@ -52,6 +53,26 @@ def run_robot():
     r._move(1.2/a)
     r.drop_box()
 
+    #Idle animation
+    r._turn(-pi/2)
+    r._move(1.2/a)
+    r._turn(pi/2)
+    r._move(0.4)
+    r.pick_hold_box()
+    r._turn(pi/2)
+    r._move(0.4)
+    r.drop_box()
+    r.pick_hold_box()
+    r._move(1.65)
+    r._turn(-pi/2)
+    time_remaining = 150 - r.get_comp_time()
+    Competition_end = False
+    while not Competition_end:
+        if time_remaining <= 20:
+            Competition_end = True
+
+    r.drop_box()
+    r._move(-1)
 
 
 run_robot()
