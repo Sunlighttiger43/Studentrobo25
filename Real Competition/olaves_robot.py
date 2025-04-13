@@ -302,6 +302,7 @@ class OlavesRobot(sr.Robot):
         Parameters:
             distance (float): The distance to move in meters. Positive values move the robot forward, while negative values move it backward.
         """
+        #MARK: _MOVE
         DIST_TO_TIME = 5
         direction = "forward" if distance > 0 else "backward"
 
@@ -1053,6 +1054,7 @@ class OlavesRobot(sr.Robot):
         Raises:
             "MarkerNotFound" : Exception when the specified marker is not found by the robot
         """
+        # MARK: MOVE TO MARKER
         logger.info(f"[move_to_marker] | Moving to Marker: {marker_id}")
 
         DIST_TOLERANCE = 0.1  # meters
