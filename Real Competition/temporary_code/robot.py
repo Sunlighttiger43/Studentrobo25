@@ -11,7 +11,6 @@ This involves move_to_marker, pick_hold_box, drop_box and get_marker_by_id
 import logging
 from olaves_robot import OlavesRobot
 from math import pi
-import time
 r = OlavesRobot()
 
 def configure_logging():
