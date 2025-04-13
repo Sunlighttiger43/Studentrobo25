@@ -116,6 +116,8 @@ class MainCycle(State):
         - Returns None if none found after a full search
 
         You can adapt this to do a full 360 search or partial.
+
+        Returns: MarkerID object
         """
         # Try once initially without turning
         markers = self.robot.camera.see()
