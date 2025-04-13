@@ -398,8 +398,6 @@ class OlavesRobot(sr.Robot):
 
     def get_marker_by_idrange(
         self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
-    def get_marker_by_idrange(
-        self, marker_id_list: list, search_angle: float = pi * 2, speed: float = 0.2
     ) -> Optional[sr.marker]:
         """
         Retrieves a marker object by its ID.
@@ -1353,24 +1351,15 @@ class OlavesRobot(sr.Robot):
     def hardward_initialisation(self) -> None:
         try:
             logger.info("Hardware Initialisation")
-            self.stepperuino_write(data="d")
+            self.stepperuino_write(data="@")
             self.sleep(3)
 
-            for i in range(8):
-                self.stepperuino_write(data="+")
+            self.stepperuino_write(data="u")
             self.sleep(3)
-
-    def hardward_initialisation(self) -> None:
-        logger.info("Hardware Initialisation")
-        self.stepperuino_write(data="@")
-        self.sleep(3)
-
-        self.stepperuino_write(data="u")
-        self.sleep(3)
 
             for i in range(8):
                 self.stepperuino_write(data="-")
-            self.sleep(3)
+                self.sleep(3)
         except:
             logger.warning("[olavesRobot - hardward_initialisation] Error during hardward_initialisation. (Except-branch of try-except statement)")
 

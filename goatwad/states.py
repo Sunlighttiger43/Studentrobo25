@@ -159,16 +159,9 @@ class MainCycle(State):
         if base_marker:
             self.robot.move_to_marker(base_marker_id)
         else:
-            logger.warning(
-                "[_return_to_corner] Couldn't see base marker on first try, scanning."
+            logger.error(
+                "[_return_to_corner] Base marker not found after scanning. Proceeding anyway."
             )
-            found = self.robot.get_marker_by_idrange([base_marker_id])
-            if found:
-                self.robot.move_to_marker(base_marker_id)
-            else:
-                logger.error(
-                    "[_return_to_corner] Base marker not found after scanning. Proceeding anyway."
-                )
 
 
 class DoneState(State):
