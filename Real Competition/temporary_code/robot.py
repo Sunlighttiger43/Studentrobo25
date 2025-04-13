@@ -43,9 +43,11 @@ def run_robot():
 
     r._move(1.95*a)
     r.pick_hold_box()
+    r._move(-0.1*a)
     r._turn(pi/2)
     r._move(3)
     r.drop_box()
+    r._move(-0.2*a)
     '''
     r.pick_hold_box()
     r._turn(-pi/2)
