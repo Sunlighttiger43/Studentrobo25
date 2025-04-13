@@ -40,21 +40,21 @@ def run_robot():
 
     configure_logging()
     #Initial strategy for like guaranteed first few points
-    r._move(2/a)
+    r._move(2*a)
     r.pick_hold_box()
     r._turn(-pi/2)
-    r._move(0.4/a)
+    r._move(0.4*a)
     r.drop_box()
     r.pick_hold_box()
     r._turn(-pi/2)
-    r._move(0.45/a)
+    r._move(0.45*a)
     r._turn(pi/2)
-    r._move(1.2/a)
+    r._move(1.2*a)
     r.drop_box()
 
     #Idle animation
     r._turn(-pi/2)
-    r._move(1.2/a)
+    r._move(1.2*a)
     r._turn(pi/2)
     r._move(0.4)
     r.pick_hold_box()
