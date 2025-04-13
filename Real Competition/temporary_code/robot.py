@@ -47,7 +47,14 @@ def run_robot():
     r._turn(pi/2)
     r._move(3)
     r.drop_box()
-    r._move(-0.2*a)
+    time_remaining = 150 - r.get_comp_time()
+    Competition_end = False
+    while not Competition_end:
+        if time_remaining <= 20:
+            Competition_end = True
+
+    r.drop_box()
+    r._move(-1)
     '''
     r.pick_hold_box()
     r._turn(-pi/2)
